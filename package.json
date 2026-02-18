@@ -1,10 +1,10 @@
 {
-  "name": "01_intro-to-express",
+  "name": "s-drive",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "node --watch app.js"
+    "dev": "bun --bun --watch src/server.js"
   },
   "keywords": [],
   "author": "",
