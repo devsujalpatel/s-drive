@@ -28,10 +28,10 @@ app.post("/user", (req, res, next) => {
 });
 
 
-app.patch("/user:id", (req, res, next) => {
+app.patch("/user/:id", (req, res, next) => {
     try {
         const {email} = req.body; 
-        const {id} = req.params.id;
+        const id = req.params.id;
 
         if(!email) {
             throw new Error("Email is not available")
@@ -48,9 +48,9 @@ app.patch("/user:id", (req, res, next) => {
     }
 })
 
-app.delete("/user:id", (req, res, next) => {
+app.delete("/user/:id", (req, res, next) => {
     try {
-        const {id} = req.params.id;
+        const id = req.params.id;
 
         if(!id) {
             throw new Error("User Id is required")
