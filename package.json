@@ -1,10 +1,10 @@
 {
   "name": "s-drive",
   "version": "1.0.0",
-  "main": "src/server.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "bun --bun --watch src/server.js"
+    "dev": "bun --bun --watch server.js"
   },
   "keywords": [],
   "author": "",
