@@ -1,5 +1,6 @@
 import express from "express";
 import "dotenv/config";
+import { readdir } from "fs/promises";
 
 export const app = express();
 
@@ -10,6 +11,17 @@ app.use((req, res, next) => {
   next()
 })
 
-app.get("/", (req, res) => {
-  res.json(["test.txt", "hello.png"])
+// app.use(express.static("storage"))
+
+app.use((req, res, next) => {
+  if(req.query.action = "download") {
+    res.set('Content-Disposition', "attatchment")
+  }
+  express.static("storage")(req, res, next);
+})
+
+app.get("/", async (req, res) => {
+  const filesList = await readdir("./storage")
+  console.log(filesList)
+  res.send(filesList)
 });
