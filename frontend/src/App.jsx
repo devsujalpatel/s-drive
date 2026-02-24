@@ -71,7 +71,7 @@ function App() {
       <p>Progress: {progress}%</p>
       {directoryItems.map((item, i) => (
         <div key={i}>
-          {item} <a href={`${URL}${item}?action=open`}>Open</a>{" "}
+          {item} <a href={`${URL}${item}?action=open`}>Open</a> {" "}
           <a href={`${URL}${item}?action=download`}>Download</a>
           <button onClick={() => renameFile(item)}>Rename</button>
           <button onClick={() => saveFilename(item)}>Save</button>

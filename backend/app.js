@@ -16,9 +16,20 @@ app.use((req, res, next) => {
 
 // servering files
 app.use((req, res, next) => {
-  if(req.query.action === "download") {
-    res.setHeader('Content-Disposition', "attachment")
+  const fileName = req.path.split("/").pop();
+
+  if (req.query.action === "download") {
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+  } else {
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${fileName}"`
+    );
   }
+
   express.static("storage")(req, res, next);
 })
 
