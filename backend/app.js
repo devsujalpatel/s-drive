@@ -2,6 +2,7 @@ import express from "express";
 import "dotenv/config";
 import { readdir, rename } from "fs/promises";
 import { createWriteStream } from "fs";
+import cors from "cors"
 
 export const app = express();
 
@@ -9,14 +10,9 @@ app.disable("x-powered-by");
 app.use(express.json());
 
 // Enabling Cors from anywhere
-app.use((req, res, next) => {
-  res.set({
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "*",
-    "Access-Control-Allow-Headers": "*",
-  })
-  next()
-})
+app.use(cors({
+  origin: "http://localhost:5173"
+}))
 
 // Create
 app.post("/:filename", async (req, res) => {
