@@ -18,9 +18,18 @@ app.use((req, res, next) => {
   next()
 })
 
+// Create
+app.post("/:filename", async (req, res) => {
+   const writeStream =  createWriteStream(`./storage/${req.params.filename}`);
+   req.pipe(writeStream)
+   req.on("end", () => {
+    res.status(201).json({
+      message: "File uploaded"
+    });
+   });
+})
 
-
-// serving files
+// Read
 app.get("/:filename", (req, res) => {
   const {filename} = req.params;
  
@@ -38,27 +47,7 @@ app.get("/:filename", (req, res) => {
   res.sendFile(`${import.meta.dirname}/storage/${filename}`)
 })
 
-app.delete("/:filename",  async (req, res) => {
-  const {filename} = req.params;
-
-  const filePath = `./storage/${filename}`;
-  const newPath = `./trash/${filename}`
-   try {
-   await rename(filePath, newPath, (err) => {
-    if (err) throw err;
-   });
-   res.status(204).json({
-    message: "File Deleted Successfully"
-  })
-
- } catch (error) {
-  console.error(error)
-  res.status(404).json({
-    message: "File not found"
-  })
- }
-})
-
+// Update
 app.patch("/:filename",  async (req, res) => {
   const {filename} = req.params;
   const {newFilename} = req.body;
@@ -81,15 +70,29 @@ app.patch("/:filename",  async (req, res) => {
  }
 })
 
-app.post("/:filename", async (req, res) => {
-   const writeStream =  createWriteStream(`./storage/${req.params.filename}`);
-   req.pipe(writeStream)
-   req.on("end", () => {
-    res.status(201).json({
-      message: "File uploaded"
-    });
+// Delete
+app.delete("/:filename",  async (req, res) => {
+  const {filename} = req.params;
+
+  const filePath = `./storage/${filename}`;
+  const newPath = `./trash/${filename}`
+   try {
+   await rename(filePath, newPath, (err) => {
+    if (err) throw err;
    });
+   res.status(204).json({
+    message: "File Deleted Successfully"
+  })
+
+ } catch (error) {
+  console.error(error)
+  res.status(404).json({
+    message: "File not found"
+  })
+ }
 })
+
+
 
 
 // serving directory content

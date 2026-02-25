@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-  const URL = "http://localhost:4000";
+  const URL: string = "http://localhost:4000";
   const [directoryItems, setDirectoryItems] = useState([]);
   const [progress, setProgress] = useState(0);
   const [newFilename, setNewFilename] = useState("");
@@ -16,7 +16,12 @@ function App() {
     getDirectoryItems();
   }, []);
 
-  async function uploadFile(e) {
+  async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
+    
+    if(!e.target.files){
+      throw new Error("No File found");
+    } 
+
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${URL}/${file.name}`, true);
@@ -25,13 +30,13 @@ function App() {
       getDirectoryItems();
     });
     xhr.upload.addEventListener("progress", (e) => {
-      const totalProgress = (e.loaded / e.total) * 100;
-      setProgress(totalProgress.toFixed(2));
+      const totalProgress = Number(((e.loaded / e.total) * 100).toFixed(2));
+      setProgress(totalProgress);
     });
     xhr.send(file);
   }
 
-  async function handleDelete(filename) {
+  async function handleDelete(filename: string) {
     const response = await fetch(`${URL}/${filename}`, {
       method: "DELETE",
       body: filename,
@@ -41,12 +46,12 @@ function App() {
     getDirectoryItems();
   }
 
-  async function renameFile(oldFilename) {
+  async function renameFile(oldFilename: string) {
     console.log({ oldFilename, newFilename });
     setNewFilename(oldFilename);
   }
 
-  async function saveFilename(oldFilename) {
+  async function saveFilename(oldFilename: string) {
     setNewFilename(oldFilename);
     const response = await fetch(`${URL}/${oldFilename}`, {
       method: "PATCH",
