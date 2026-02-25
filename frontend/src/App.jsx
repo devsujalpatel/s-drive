@@ -19,8 +19,7 @@ function App() {
   async function uploadFile(e) {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", URL, true);
-    xhr.setRequestHeader("filename", file.name);
+    xhr.open("POST", `${URL}/${file.name}`, true);
     xhr.addEventListener("load", () => {
       console.log(xhr.response);
       getDirectoryItems();

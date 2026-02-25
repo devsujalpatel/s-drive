@@ -1,6 +1,7 @@
 import express from "express";
 import "dotenv/config";
 import { readdir, rename } from "fs/promises";
+import { createWriteStream } from "fs";
 
 export const app = express();
 
@@ -57,6 +58,7 @@ app.delete("/:filename",  async (req, res) => {
   })
  }
 })
+
 app.patch("/:filename",  async (req, res) => {
   const {filename} = req.params;
   const {newFilename} = req.body;
@@ -77,6 +79,16 @@ app.patch("/:filename",  async (req, res) => {
     message: "File not found"
   })
  }
+})
+
+app.post("/:filename", async (req, res) => {
+   const writeStream =  createWriteStream(`./storage/${req.params.filename}`);
+   req.pipe(writeStream)
+   req.on("end", () => {
+    res.status(201).json({
+      message: "File uploaded"
+    });
+   });
 })
 
 
