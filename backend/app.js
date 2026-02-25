@@ -1,6 +1,6 @@
 import express from "express";
 import "dotenv/config";
-import { readdir, rm } from "fs/promises";
+import { readdir, rename } from "fs/promises";
 
 export const app = express();
 
@@ -40,8 +40,11 @@ app.delete("/:filename",  async (req, res) => {
   const {filename} = req.params;
 
   const filePath = `./storage/${filename}`;
+  const newPath = `./trash/${filename}`
    try {
-   await rm(filePath);
+   await rename(filePath, newPath, (err) => {
+    if (err) throw err;
+   });
    res.status(204).json({
     message: "File Deleted Successfully"
   })
