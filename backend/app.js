@@ -11,7 +11,8 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.set({
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "*"
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Headers": "*",
   })
   next()
 })
@@ -47,6 +48,27 @@ app.delete("/:filename",  async (req, res) => {
    });
    res.status(204).json({
     message: "File Deleted Successfully"
+  })
+
+ } catch (error) {
+  console.error(error)
+  res.status(404).json({
+    message: "File not found"
+  })
+ }
+})
+app.patch("/:filename",  async (req, res) => {
+  const {filename} = req.params;
+  const {newFilename} = req.body;
+
+  const filePath = `./storage/${filename}`;
+  const newPath = `./storage/${newFilename}`;
+   try {
+   await rename(filePath, newPath, (err) => {
+    if (err) throw err;
+   });
+   res.status(204).json({
+    message: "File Renamed Successfully"
   })
 
  } catch (error) {
