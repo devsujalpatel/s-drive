@@ -14,24 +14,25 @@ app.use((req, res, next) => {
 })
 
 
-// servering files
-app.use((req, res, next) => {
-  const fileName = req.path.split("/").pop();
 
+// serving files
+app.get("/:filename", (req, res) => {
+  const {filename} = req.params;
+ 
   if (req.query.action === "download") {
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${fileName}"`
+      `attachment; filename="${filename}"`
     );
   } else {
     res.setHeader(
       "Content-Disposition",
-      `inline; filename="${fileName}"`
+      `inline; filename="${filename}"`
     );
   }
-
-  express.static("storage")(req, res, next);
+  res.sendFile(`${import.meta.dirname}/storage/${filename}`)
 })
+
 
 // serving directory content
 app.get("/", async (req, res) => {
