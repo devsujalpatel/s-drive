@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
-  const URL = "http://localhost:4000/";
+  const URL = "http://localhost:4000";
   const [directoryItems, setDirectoryItems] = useState([]);
   const [progress, setProgress] = useState(0);
   const [newFilename, setNewFilename] = useState("");
@@ -33,7 +33,7 @@ function App() {
   }
 
   async function handleDelete(filename) {
-    const response = await fetch(URL, {
+    const response = await fetch(`${URL}/${filename}`, {
       method: "DELETE",
       body: filename,
     });
@@ -71,7 +71,7 @@ function App() {
       <p>Progress: {progress}%</p>
       {directoryItems.map((item, i) => (
         <div key={i}>
-          {item} <a href={`${URL}${item}?action=open`}>Open</a> {" "}
+          {item} <a href={`${URL}/${item}?action=open`}>Open</a> {" "}
           <a href={`${URL}${item}?action=download`}>Download</a>
           <button onClick={() => renameFile(item)}>Rename</button>
           <button onClick={() => saveFilename(item)}>Save</button>

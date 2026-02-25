@@ -9,7 +9,8 @@ app.use(express.json());
 
 // Enabling Cors from anywhere
 app.use((req, res, next) => {
-  res.set("Access-Control-Allow-Origin", "*")
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "*");
   next()
 })
 
@@ -31,6 +32,15 @@ app.get("/:filename", (req, res) => {
     );
   }
   res.sendFile(`${import.meta.dirname}/storage/${filename}`)
+})
+
+app.delete("/:filename", (req, res) => {
+  const {filename} = req.params;
+ 
+  console.log(filename)
+  res.send("Deleted")
+
+  // res.sendFile(`${import.meta.dirname}/storage/${filename}`)
 })
 
 
