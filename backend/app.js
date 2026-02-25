@@ -1,6 +1,6 @@
 import express from "express";
 import "dotenv/config";
-import { readdir } from "fs/promises";
+import { readdir, rm } from "fs/promises";
 
 export const app = express();
 
@@ -9,8 +9,10 @@ app.use(express.json());
 
 // Enabling Cors from anywhere
 app.use((req, res, next) => {
-  res.set("Access-Control-Allow-Origin", "*");
-  res.set("Access-Control-Allow-Methods", "*");
+  res.set({
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "*"
+  })
   next()
 })
 
@@ -34,13 +36,22 @@ app.get("/:filename", (req, res) => {
   res.sendFile(`${import.meta.dirname}/storage/${filename}`)
 })
 
-app.delete("/:filename", (req, res) => {
+app.delete("/:filename",  async (req, res) => {
   const {filename} = req.params;
- 
-  console.log(filename)
-  res.send("Deleted")
 
-  // res.sendFile(`${import.meta.dirname}/storage/${filename}`)
+  const filePath = `./storage/${filename}`;
+   try {
+   await rm(filePath);
+   res.status(204).json({
+    message: "File Deleted Successfully"
+  })
+
+ } catch (error) {
+  console.error(error)
+  res.status(404).json({
+    message: "File not found"
+  })
+ }
 })
 
 
