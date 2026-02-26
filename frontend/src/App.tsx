@@ -23,13 +23,14 @@ import {
 
 function App() {
   const URL = "http://localhost:4000";
+  const BASE_URL = `${URL}/api/v1`;
   const [directoryItems, setDirectoryItems] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
 
   async function getDirectoryItems() {
-    const res = await fetch(URL);
+    const res = await fetch(`${BASE_URL}/directory`);
     const data = await res.json();
     setDirectoryItems(data);
   }
@@ -44,7 +45,7 @@ function App() {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", `${URL}/${file.name}`, true);
+    xhr.open("POST", `${BASE_URL}/files/${file.name}`, true);
 
     xhr.upload.addEventListener("progress", (e) => {
       setProgress(Number(((e.loaded / e.total) * 100).toFixed(0)));
@@ -56,7 +57,7 @@ function App() {
   }
 
   async function handleDelete(filename: string) {
-    await fetch(`${URL}/${filename}`, { method: "DELETE" });
+    await fetch(`${BASE_URL}/files/${filename}`, { method: "DELETE" });
     getDirectoryItems();
   }
 
@@ -68,7 +69,7 @@ function App() {
   async function saveFilename() {
     if (!editingFile) return;
 
-    await fetch(`${URL}/${editingFile}`, {
+    await fetch(`${BASE_URL}/files/${editingFile}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newFilename }),
@@ -124,7 +125,10 @@ function App() {
         {/* FILE LIST */}
         <div className="grid gap-3">
           {directoryItems.map((file, i) => (
-            <Card key={i} className="hover:shadow-md transition-all">
+            <Card
+              key={i}
+              className="hover:shadow-md transition-all border-neutral-400"
+            >
               <CardContent className="flex items-center justify-between">
                 {/* LEFT */}
                 <div className="flex items-center gap-3">
@@ -141,14 +145,14 @@ function App() {
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent align="end">
-                    <a href={`${URL}/${file}?action=open`}>
+                    <a href={`${BASE_URL}/files/${file}?action=open`}>
                       <DropdownMenuItem>
                         <ExternalLink size={14} className="mr-2" />
                         Open
                       </DropdownMenuItem>
                     </a>
 
-                    <a href={`${URL}/${file}?action=download`}>
+                    <a href={`${BASE_URL}/files/${file}?action=download`}>
                       <DropdownMenuItem>
                         <Download size={14} className="mr-2" />
                         Download

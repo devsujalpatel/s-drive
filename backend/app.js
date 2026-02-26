@@ -14,86 +14,21 @@ app.use(cors({
   origin: "http://localhost:5173"
 }))
 
-// Create
-app.post("/:filename", async (req, res) => {
-   const writeStream =  createWriteStream(`./storage/${req.params.filename}`);
-   req.pipe(writeStream)
-   req.on("end", () => {
-    res.status(201).json({
-      message: "File uploaded"
-    });
-   });
-})
 
-// Read
-app.get("/:filename", (req, res) => {
-  const {filename} = req.params;
- 
-  if (req.query.action === "download") {
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${filename}"`
-    );
-  } else {
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${filename}"`
-    );
-  }
-  res.sendFile(`${import.meta.dirname}/storage/${filename}`)
-})
-
-// Update
-app.patch("/:filename",  async (req, res) => {
-  const {filename} = req.params;
-  const {newFilename} = req.body;
-
-  const filePath = `./storage/${filename}`;
-  const newPath = `./storage/${newFilename}`;
-   try {
-   await rename(filePath, newPath, (err) => {
-    if (err) throw err;
-   });
-   res.status(204).json({
-    message: "File Renamed Successfully"
-  })
-
- } catch (error) {
-  console.error(error)
-  res.status(404).json({
-    message: "File not found"
-  })
- }
-})
-
-// Delete
-app.delete("/:filename",  async (req, res) => {
-  const {filename} = req.params;
-
-  const filePath = `./storage/${filename}`;
-  const newPath = `./trash/${filename}`
-   try {
-   await rename(filePath, newPath, (err) => {
-    if (err) throw err;
-   });
-   res.status(204).json({
-    message: "File Deleted Successfully"
-  })
-
- } catch (error) {
-  console.error(error)
-  res.status(404).json({
-    message: "File not found"
-  })
- }
-})
-
-
+// Routes 
+import filesRouter from "./routes/files.routes.js"
 
 
 // serving directory content
-app.get("/", async (req, res) => {
+app.get("/api/v1/directory", async (req, res) => {
   const filesList = await readdir("./storage")
   console.log(filesList)
   res.send(filesList)
 });
+
+
+app.use("/api/v1/files", filesRouter)
+
+
+
+
