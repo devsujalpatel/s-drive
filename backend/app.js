@@ -1,7 +1,5 @@
 import express from "express";
 import "dotenv/config";
-import { readdir, rename } from "fs/promises";
-import { createWriteStream } from "fs";
 import cors from "cors"
 
 export const app = express();
@@ -17,17 +15,12 @@ app.use(cors({
 
 // Routes 
 import filesRouter from "./routes/files.routes.js"
+import directroyRouter from "./routes/directory.routes.js"
 
 
-// serving directory content
-app.get("/api/v1/directory", async (req, res) => {
-  const filesList = await readdir("./storage")
-  console.log(filesList)
-  res.send(filesList)
-});
 
-
-app.use("/api/v1/files", filesRouter)
+app.use("/api/v1/files", filesRouter) // files routes
+app.use("/api/v1/directory", directroyRouter) // files routes
 
 
 
