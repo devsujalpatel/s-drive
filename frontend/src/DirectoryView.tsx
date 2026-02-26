@@ -41,7 +41,18 @@ export default function DirectoryView() {
 
   async function getDirectoryItems() {
     setLoading(true);
-    const res = await fetch(`${BASE_URL}/directory/${dirPath}`);
+    const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
+    // ❌ Folder not found
+    if (res.status === 404) {
+      setDirectoryItems([]);
+      setLoading(false);
+      return "Folder Not Found";
+    }
+
+    // ❌ Other server errors
+    if (!res.ok) {
+      throw new Error("Something went wrong");
+    }
     const data: DirectoryItems[] = await res.json();
     setDirectoryItems(data);
     setLoading(false);
@@ -225,7 +236,7 @@ export default function DirectoryView() {
               ),
             )
           ) : (
-            <div>No Files</div>
+            <div>No Files or Folder Found</div>
           )}
         </div>
       </div>
