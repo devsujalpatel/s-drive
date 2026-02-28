@@ -7,10 +7,9 @@ const router = Router();
 
 const trashPath = path.join(process.cwd(), "trash");
 // Create
-router.post("/:filename", async (req, res) => {
-  const writeStream = createWriteStream(
-    `${storagePath}/${req.params.filename}`,
-  );
+router.post("/*", async (req, res) => {
+  const { 0: filePath } = req.params;
+  const writeStream = createWriteStream(`./storage/${filePath}`);
   req.pipe(writeStream);
   req.on("end", () => {
     res.status(201).json({

@@ -68,7 +68,7 @@ export default function DirectoryView() {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", `${BASE_URL}/files/${file.name}`, true);
+    xhr.open("POST", `${BASE_URL}/files/${dirPath}/${file.name}`, true);
 
     xhr.upload.addEventListener("progress", (e) => {
       setProgress(Number(((e.loaded / e.total) * 100).toFixed(0)));
