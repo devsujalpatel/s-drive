@@ -34,29 +34,31 @@ router.get("/*", (req, res) => {
 
 // Update
 router.patch("/*", async (req, res) => {
-  const { 0: filePath } = req.params;
+  const { 0: filePath } = req.params; // e.g. images/file.png
   const { newFilename } = req.body;
+
   try {
-    await rename(`./storage/${filePath}`, `./storage/${newFilename}`);
-    res.status(204).json({
-      message: "File Renamed Successfully",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(404).json({
-      message: "File not found",
-    });
+    const oldFullPath = path.join("storage", filePath);
+
+    const dir = path.dirname(filePath); // "images"
+
+    const newFullPath = path.join("storage", dir, newFilename);
+
+    await rename(oldFullPath, newFullPath);
+
+    res.json({ message: "Renamed" });
+  } catch (err) {
+    console.error(err);
+    res.status(404).json({ message: "File not found" });
   }
 });
 
 // Delete
 router.delete("/*", async (req, res) => {
   const { 0: filePath } = req.params;
-  console.log(filePath);
   const pathsArr = filePath.split("/");
   const filename = pathsArr[pathsArr.length - 1];
   const newPath = `${trashPath}/${filename}`;
-  console.log(newPath);
 
   try {
     await rename(`./storage/${filePath}`, newPath);

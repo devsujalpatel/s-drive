@@ -91,8 +91,8 @@ export default function DirectoryView() {
   }
 
   function renameFile(name: string) {
-    setEditingFile(name); // store old file
-    setNewFilename(name); // prefill input
+    setEditingFile(name); // ONLY filename
+    setNewFilename(name);
   }
 
   async function saveFilename() {
@@ -101,7 +101,7 @@ export default function DirectoryView() {
     await fetch(`${BASE_URL}/files/${dirPath}/${editingFile}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newFilename: `${dirPath}/${newFilename}` }),
+      body: JSON.stringify({ newFilename: `${newFilename}` }),
     });
 
     setEditingFile(null);
@@ -162,21 +162,38 @@ export default function DirectoryView() {
                   key={item}
                   className="hover:shadow-md transition-all border-neutral-400 cursor-pointer"
                 >
-                  <Link
-                    to={`${!isDirectory ? `${BASE_URL}/files/${dirPath}/${item}?action=open` : `./${item}`}`}
-                  >
-                    <CardContent className="flex items-center justify-between">
-                      {/* LEFT */}
-                      <div className="flex items-center gap-3">
-                        {isDirectory ? (
-                          <Folder size={20} className="text-muted-foreground" />
+                  <CardContent className="flex items-center justify-between">
+                    {/* LEFT */}
+                    <div className="flex items-center gap-3">
+                      {isDirectory ? (
+                        <Folder size={20} className="text-muted-foreground" />
+                      ) : (
+                        <FileText size={20} className="text-muted-foreground" />
+                      )}
+                      <span className="font-medium truncate">{item}</span>
+                    </div>
+
+                    <div className="flex">
+                      <div className="w-50 mr-10">
+                        {!isDirectory ? (
+                          <Link
+                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 items-center justify-center border border-neutral-500 rounded-xl"
+                            to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
+                            target="_blank"
+                          >
+                            <ExternalLink size={14} className="mr-2" />
+                            Open
+                          </Link>
                         ) : (
-                          <FileText
-                            size={20}
-                            className="text-muted-foreground"
-                          />
+                          <Link
+                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 items-center justify-center border border-neutral-500 rounded-xl"
+                            to={`./${item}`}
+                            target="_blank"
+                          >
+                            <ExternalLink size={14} className="mr-2" />
+                            Open
+                          </Link>
                         )}
-                        <span className="font-medium truncate">{item}</span>
                       </div>
 
                       {/* RIGHT ACTION MENU */}
@@ -236,8 +253,8 @@ export default function DirectoryView() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </CardContent>
-                  </Link>
+                    </div>
+                  </CardContent>
                 </Card>
               ),
             )
