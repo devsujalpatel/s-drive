@@ -7,8 +7,8 @@ const router = Router();
 const storagePath = path.join(process.cwd(), "storage");
 // const trashPath = path.join(process.cwd(), "trash");
 
-router.get("/:dirname?", async (req, res) => {
-  const { dirname } = req.params;
+router.get("/?*", async (req, res) => {
+  const { 0: dirname } = req.params;
 
   const fullDirPath = `${storagePath}/${dirname ? dirname : ""}`;
 

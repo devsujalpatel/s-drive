@@ -21,7 +21,7 @@ import {
   ExternalLink,
   Folder,
 } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 interface DirectoryItems {
   name: string;
@@ -60,7 +60,7 @@ export default function DirectoryView() {
 
   useEffect(() => {
     getDirectoryItems();
-  }, []);
+  }, [dirPath]);
 
   async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
@@ -159,79 +159,83 @@ export default function DirectoryView() {
                 <Card
                   key={item}
                   className="hover:shadow-md transition-all border-neutral-400 cursor-pointer"
-                  onClick={() =>
-                    window.open(
-                      `${!isDirectory ? `${BASE_URL}/files/${item}?action=open` : `./${item}`}`,
-                    )
-                  }
                 >
-                  <CardContent className="flex items-center justify-between">
-                    {/* LEFT */}
-                    <div className="flex items-center gap-3">
-                      {isDirectory ? (
-                        <Folder size={20} className="text-muted-foreground" />
-                      ) : (
-                        <FileText size={20} className="text-muted-foreground" />
-                      )}
-                      <span className="font-medium truncate">{item}</span>
-                    </div>
-
-                    {/* RIGHT ACTION MENU */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical size={18} />
-                        </Button>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="end">
-                        {!isDirectory ? (
-                          <a
-                            href={`${BASE_URL}/files/${item}?action=open`}
-                            target="_blank"
-                          >
-                            <DropdownMenuItem>
-                              <ExternalLink size={14} className="mr-2" />
-                              Open
-                            </DropdownMenuItem>
-                          </a>
+                  <Link
+                    to={`${!isDirectory ? `${BASE_URL}/files/${dirPath}/${item}?action=open` : `./${item}`}`}
+                  >
+                    <CardContent className="flex items-center justify-between">
+                      {/* LEFT */}
+                      <div className="flex items-center gap-3">
+                        {isDirectory ? (
+                          <Folder size={20} className="text-muted-foreground" />
                         ) : (
-                          <a href={`./${item}`} target="_blank">
-                            <DropdownMenuItem>
-                              <ExternalLink size={14} className="mr-2" />
-                              Open
-                            </DropdownMenuItem>
-                          </a>
+                          <FileText
+                            size={20}
+                            className="text-muted-foreground"
+                          />
                         )}
+                        <span className="font-medium truncate">{item}</span>
+                      </div>
 
-                        {!isDirectory && (
-                          <a href={`${BASE_URL}/files/${item}?action=download`}>
-                            <DropdownMenuItem>
-                              <Download size={14} className="mr-2" />
-                              Download
-                            </DropdownMenuItem>
-                          </a>
-                        )}
+                      {/* RIGHT ACTION MENU */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical size={18} />
+                          </Button>
+                        </DropdownMenuTrigger>
 
-                        <DropdownMenuItem onClick={() => renameFile(item)}>
-                          <Pencil size={14} className="mr-2" />
-                          Rename
-                        </DropdownMenuItem>
+                        <DropdownMenuContent align="end">
+                          {!isDirectory ? (
+                            <Link
+                              to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
+                              target="_blank"
+                            >
+                              <DropdownMenuItem>
+                                <ExternalLink size={14} className="mr-2" />
+                                Open
+                              </DropdownMenuItem>
+                            </Link>
+                          ) : (
+                            <Link to={`./${item}`} target="_blank">
+                              <DropdownMenuItem>
+                                <ExternalLink size={14} className="mr-2" />
+                                Open
+                              </DropdownMenuItem>
+                            </Link>
+                          )}
 
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(item)}
-                          className="text-red-500"
-                        >
-                          <Trash size={14} className="mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </CardContent>
+                          {!isDirectory && (
+                            <Link
+                              to={`${BASE_URL}/files/${dirPath}/${item}?action=download`}
+                            >
+                              <DropdownMenuItem>
+                                <Download size={14} className="mr-2" />
+                                Download
+                              </DropdownMenuItem>
+                            </Link>
+                          )}
+
+                          <DropdownMenuItem onClick={() => renameFile(item)}>
+                            <Pencil size={14} className="mr-2" />
+                            Rename
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(item)}
+                            className="text-red-500"
+                          >
+                            <Trash size={14} className="mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </CardContent>
+                  </Link>
                 </Card>
               ),
             )
