@@ -5,7 +5,6 @@ import path from "path";
 
 const router = Router();
 
-const storagePath = path.join(process.cwd(), "storage");
 const trashPath = path.join(process.cwd(), "trash");
 // Create
 router.post("/:filename", async (req, res) => {
@@ -29,20 +28,17 @@ router.get("/*", (req, res) => {
   } else {
     res.setHeader("Content-Disposition", `inline; filename="${filePath}"`);
   }
-  res.sendFile(`${storagePath}/${filePath}`);
+  res.sendFile(
+    `/Users/zoro/Desktop/Coding/s-drive/backend/storage/${filePath}`,
+  );
 });
 
 // Update
-router.patch("/:filename", async (req, res) => {
-  const { filename } = req.params;
+router.patch("/*", async (req, res) => {
+  const { 0: filePath } = req.params;
   const { newFilename } = req.body;
-
-  const filePath = path.join(storagePath, filename);
-  const newPath = path.join(storagePath, newFilename);
   try {
-    await rename(filePath, newPath, (err) => {
-      if (err) throw err;
-    });
+    await rename(`./storage/${filePath}`, `./storage/${newFilename}`);
     res.status(204).json({
       message: "File Renamed Successfully",
     });
@@ -55,13 +51,16 @@ router.patch("/:filename", async (req, res) => {
 });
 
 // Delete
-router.delete("/:filename", async (req, res) => {
-  const { filename } = req.params;
-
-  const filePath = `${storagePath}/${filename}`;
+router.delete("/*", async (req, res) => {
+  const { 0: filePath } = req.params;
+  console.log(filePath);
+  const pathsArr = filePath.split("/");
+  const filename = pathsArr[pathsArr.length - 1];
   const newPath = `${trashPath}/${filename}`;
+  console.log(newPath);
+
   try {
-    await rename(filePath, newPath);
+    await rename(`./storage/${filePath}`, newPath);
     res.status(204).json({
       message: "File Deleted Successfully",
     });

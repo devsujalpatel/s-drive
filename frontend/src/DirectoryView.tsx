@@ -84,7 +84,9 @@ export default function DirectoryView() {
   }
 
   async function handleDelete(filename: string) {
-    await fetch(`${BASE_URL}/files/${filename}`, { method: "DELETE" });
+    await fetch(`${BASE_URL}/files/${dirPath}/${filename}`, {
+      method: "DELETE",
+    });
     getDirectoryItems();
   }
 
@@ -96,10 +98,10 @@ export default function DirectoryView() {
   async function saveFilename() {
     if (!editingFile) return;
 
-    await fetch(`${BASE_URL}/files/${editingFile}`, {
+    await fetch(`${BASE_URL}/files/${dirPath}/${editingFile}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ newFilename }),
+      body: JSON.stringify({ newFilename: `${dirPath}/${newFilename}` }),
     });
 
     setEditingFile(null);
