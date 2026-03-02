@@ -39,4 +39,9 @@ router.get("/?*", async (req, res) => {
   }
 });
 
+router.post("/?*", async (req, res) => {
+  const {0: dirname} = req.params;
+
+})
+
 export default router;

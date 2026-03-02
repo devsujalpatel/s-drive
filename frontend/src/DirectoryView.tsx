@@ -20,6 +20,7 @@ import {
   Download,
   ExternalLink,
   Folder,
+  Plus,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
@@ -36,6 +37,8 @@ export default function DirectoryView() {
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCreatingDirectory, setIsCreatingDirectory] = useState(true);
+  const [directoryName, setDirectoryName] = useState("");
 
   const { "*": dirPath } = useParams();
 
@@ -109,21 +112,43 @@ export default function DirectoryView() {
     getDirectoryItems();
   }
 
+  function handleCreateFileBtnClick(e: React.ChangeEvent<HTMLInputElement>) {
+
+  }
+
   return (
-    <div className="min-h-screen bg-muted/40 p-6 flex justify-center">
+    <div className="min-h-screen relative bg-muted/40 p-6 flex justify-center">
+      <div className="absolute z-900 bg-neutral-900/5">
+        <form action="">
+          
+        </form>
+      </div>
       <div className="w-full max-w-4xl space-y-6">
         {/* HEADER */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-semibold tracking-tight">My Files</h1>
-
-          <label>
-            <Button asChild className="gap-2 cursor-pointer">
+          <Link to="/">
+            <h1 className="text-3xl font-semibold tracking-tight">My Files</h1>
+          </Link>
+          <div className="flex gap-4 justify-center items-center">
+            <Button
+              onClick={handleCreateFileBtnClick}
+              asChild
+              variant={"ghost"}
+              className="gap-2 cursor-pointer"
+            >
               <span>
-                <Upload size={16} /> Upload
+                <Plus size={16} /> Create File
               </span>
             </Button>
-            <input type="file" hidden onChange={uploadFile} />
-          </label>
+            <label>
+              <Button asChild className="gap-2 cursor-pointer">
+                <span>
+                  <Upload size={16} /> Upload
+                </span>
+              </Button>
+              <input type="file" hidden onChange={uploadFile} />
+            </label>
+          </div>
         </div>
 
         {/* RENAME INPUT */}
