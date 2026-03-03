@@ -1,5 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import DirectoryView from "./DirectoryView";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const router = createBrowserRouter([
   {
@@ -9,7 +11,12 @@ const router = createBrowserRouter([
 ]);
 
 const App = () => {
-  return <RouterProvider router={router} />;
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <Toaster />
+      <RouterProvider router={router} />;
+    </ThemeProvider>
+  );
 };
 
 export default App;

@@ -4,8 +4,8 @@ import path from "path";
 
 const router = Router();
 
-const storagePath = path.join(process.cwd(), "storage");
-// const trashPath = path.join(process.cwd(), "trash");
+const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
+const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
 
 router.get("/?*", async (req, res) => {
   const { 0: dirname } = req.params;
@@ -41,7 +41,7 @@ router.get("/?*", async (req, res) => {
 
 router.post("/?*", async (req, res) => {
   const {0: dirname} = req.params;
-
+  
 })
 
 export default router;

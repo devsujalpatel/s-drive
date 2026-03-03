@@ -5,11 +5,12 @@ import path from "path";
 
 const router = Router();
 
-const trashPath = path.join(process.cwd(), "trash");
+const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
+const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
 // Create
 router.post("/*", async (req, res) => {
   const { 0: filePath } = req.params;
-  const writeStream = createWriteStream(`./storage/${filePath}`);
+  const writeStream = createWriteStream(`${storagePath}/${filePath}`);
   req.pipe(writeStream);
   req.on("end", () => {
     res.status(201).json({
@@ -27,9 +28,7 @@ router.get("/*", (req, res) => {
   } else {
     res.setHeader("Content-Disposition", `inline; filename="${filePath}"`);
   }
-  res.sendFile(
-    `/Users/zoro/Desktop/Coding/s-drive/backend/storage/${filePath}`,
-  );
+  res.sendFile(`${storagePath}/${filePath}`);
 });
 
 // Update
@@ -61,7 +60,7 @@ router.delete("/*", async (req, res) => {
   const newPath = `${trashPath}/${filename}`;
 
   try {
-    await rename(`./storage/${filePath}`, newPath);
+    await rename(`${storagePath}/${filePath}`, newPath);
     res.status(204).json({
       message: "File Deleted Successfully",
     });

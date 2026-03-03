@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 
 import {
   DropdownMenu,
@@ -37,8 +38,8 @@ export default function DirectoryView() {
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isCreatingDirectory, setIsCreatingDirectory] = useState(true);
-  const [directoryName, setDirectoryName] = useState("");
+  // const [isCreatingDirectory, setIsCreatingDirectory] = useState(true);
+  // const [directoryName, setDirectoryName] = useState("");
 
   const { "*": dirPath } = useParams();
 
@@ -62,7 +63,32 @@ export default function DirectoryView() {
   }
 
   useEffect(() => {
-    getDirectoryItems();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
+        // ❌ Folder not found
+        if (res.status === 404) {
+          setDirectoryItems([]);
+          setLoading(false);
+          return "Folder Not Found";
+        }
+
+        // ❌ Other server errors
+        if (!res.ok) {
+          throw new Error("Something went wrong");
+        }
+        const data: DirectoryItems[] = await res.json();
+        setDirectoryItems(data);
+      } catch (err) {
+        toast.error("Error in loading directory")
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [dirPath]);
 
   async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -112,16 +138,12 @@ export default function DirectoryView() {
     getDirectoryItems();
   }
 
-  function handleCreateFileBtnClick(e: React.ChangeEvent<HTMLInputElement>) {
-
-  }
+  // function handleCreateFileBtnClick(e: React.ChangeEvent<HTMLInputElement>) {}
 
   return (
-    <div className="min-h-screen relative bg-muted/40 p-6 flex justify-center">
+    <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-900 p-6 flex justify-center">
       <div className="absolute z-900 bg-neutral-900/5">
-        <form action="">
-          
-        </form>
+        <form action=""></form>
       </div>
       <div className="w-full max-w-4xl space-y-6">
         {/* HEADER */}
@@ -131,7 +153,7 @@ export default function DirectoryView() {
           </Link>
           <div className="flex gap-4 justify-center items-center">
             <Button
-              onClick={handleCreateFileBtnClick}
+              // onClick={handleCreateFileBtnClick}
               asChild
               variant={"ghost"}
               className="gap-2 cursor-pointer"
@@ -213,7 +235,6 @@ export default function DirectoryView() {
                           <Link
                             className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 items-center justify-center border border-neutral-500 rounded-xl"
                             to={`./${item}`}
-                            target="_blank"
                           >
                             <ExternalLink size={14} className="mr-2" />
                             Open
