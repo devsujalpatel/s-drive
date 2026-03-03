@@ -130,7 +130,7 @@ export default function DirectoryView() {
 
     try {
       const res = await fetch(
-        `${BASE_URL}/directory/${dirPath || ""}${directoryName}`,
+        `${BASE_URL}/directory/${dirPath ? "/" + dirPath : ""}/${directoryName}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
