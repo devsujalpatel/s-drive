@@ -46,51 +46,32 @@ export default function DirectoryView() {
   const { "*": dirPath } = useParams();
 
   async function getDirectoryItems() {
-    setLoading(true);
-    const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
-    // ❌ Folder not found
-    if (res.status === 404) {
-      setDirectoryItems([]);
-      setLoading(false);
-      return "Folder Not Found";
-    }
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
+      // ❌ Folder not found
+      if (res.status === 404) {
+        setDirectoryItems([]);
+        setLoading(false);
+        return "Folder Not Found";
+      }
 
-    // ❌ Other server errors
-    if (!res.ok) {
-      throw new Error("Something went wrong");
+      // ❌ Other server errors
+      if (!res.ok) {
+        throw new Error("Something went wrong");
+      }
+      const data: DirectoryItems[] = await res.json();
+      setDirectoryItems(data);
+    } catch (err) {
+      toast.error("Error in loading directory");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    const data: DirectoryItems[] = await res.json();
-    setDirectoryItems(data);
-    setLoading(false);
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
-        // ❌ Folder not found
-        if (res.status === 404) {
-          setDirectoryItems([]);
-          setLoading(false);
-          return "Folder Not Found";
-        }
-
-        // ❌ Other server errors
-        if (!res.ok) {
-          throw new Error("Something went wrong");
-        }
-        const data: DirectoryItems[] = await res.json();
-        setDirectoryItems(data);
-      } catch (err) {
-        toast.error("Error in loading directory");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    getDirectoryItems();
   }, [dirPath]);
 
   async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
