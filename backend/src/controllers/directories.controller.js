@@ -1,20 +1,13 @@
-import { Router } from "express";
 import { readdir, stat, mkdir } from "node:fs/promises";
 
-const router = Router();
-
 const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
-const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
 
-router.get("/?*", async (req, res) => {
+export const getDirectoryContents = async (req, res) => {
   const { 0: dirname } = req.params;
-
   const fullDirPath = `${storagePath}/${dirname ? dirname : ""}`;
-
   try {
     const filesList = await readdir(fullDirPath);
     const resData = [];
-
     for (const item of filesList) {
       const stats = await stat(`${fullDirPath}/${item}`);
       resData.push({
@@ -30,15 +23,14 @@ router.get("/?*", async (req, res) => {
         message: "Folder not found",
       });
     }
-
     console.error(error);
     res.status(500).json({
       message: "Internal Server Error",
     });
   }
-});
+};
 
-router.post("/?*", async (req, res) => {
+export const createDirectory = async (req, res) => {
   const { 0: dirname } = req.params;
   try {
     const newDirPath = `${storagePath}/${dirname}`;
@@ -52,6 +44,4 @@ router.post("/?*", async (req, res) => {
       message: "Internal Server Error",
     });
   }
-});
-
-export default router;
+};

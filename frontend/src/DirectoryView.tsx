@@ -157,7 +157,7 @@ export default function DirectoryView() {
   }
 
   return (
-    <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-900 p-6 flex justify-center overflow-hidden">
+    <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-950 p-6 flex justify-center overflow-hidden">
       <ModeToggle />
       <div
         className={cn(
@@ -199,7 +199,7 @@ export default function DirectoryView() {
               onClick={openCreateDirectoryModal}
               asChild
               variant={"ghost"}
-              className="gap-2 cursor-pointer"
+              className="gap-2 cursor-pointer border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 hover:bg-neutral-200 dark:hover:bg-neutral-800"
             >
               <span>
                 <Plus size={16} /> Create File
@@ -208,7 +208,7 @@ export default function DirectoryView() {
             <label>
               <Button asChild className="gap-2 cursor-pointer">
                 <span>
-                  <Upload size={16} /> Upload
+                  <Upload size={16} /> Upload File
                 </span>
               </Button>
               <input type="file" hidden onChange={uploadFile} />
@@ -250,7 +250,7 @@ export default function DirectoryView() {
               ({ name: item, isDirectory }: DirectoryItems) => (
                 <Card
                   key={item}
-                  className="hover:shadow-md transition-all border-neutral-400 cursor-pointer"
+                  className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800 cursor-pointer"
                 >
                   <CardContent className="flex items-center justify-between">
                     {/* LEFT */}
@@ -267,7 +267,7 @@ export default function DirectoryView() {
                       <div className="w-50 mr-10">
                         {!isDirectory ? (
                           <Link
-                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 items-center justify-center border border-neutral-500 rounded-xl"
+                            className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
                             to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
                             target="_blank"
                           >
@@ -276,7 +276,7 @@ export default function DirectoryView() {
                           </Link>
                         ) : (
                           <Link
-                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 items-center justify-center border border-neutral-500 rounded-xl"
+                            className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
                             to={`./${item}`}
                           >
                             <ExternalLink size={14} className="mr-2" />
