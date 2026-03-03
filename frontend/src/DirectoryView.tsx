@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
+import { ModeToggle } from "@/components/mode-toggle";
+import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
@@ -38,8 +40,8 @@ export default function DirectoryView() {
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  // const [isCreatingDirectory, setIsCreatingDirectory] = useState(true);
-  // const [directoryName, setDirectoryName] = useState("");
+  const [isCreatingDirectory, setIsCreatingDirectory] = useState(false);
+  const [directoryName, setDirectoryName] = useState("");
 
   const { "*": dirPath } = useParams();
 
@@ -81,7 +83,7 @@ export default function DirectoryView() {
         const data: DirectoryItems[] = await res.json();
         setDirectoryItems(data);
       } catch (err) {
-        toast.error("Error in loading directory")
+        toast.error("Error in loading directory");
         console.error(err);
       } finally {
         setLoading(false);
@@ -138,12 +140,72 @@ export default function DirectoryView() {
     getDirectoryItems();
   }
 
-  // function handleCreateFileBtnClick(e: React.ChangeEvent<HTMLInputElement>) {}
+  function openCreateDirectoryModal() {
+    setIsCreatingDirectory(true);
+  }
+
+  async function createDirectory() {
+    if (!directoryName.trim()) return;
+
+    try {
+      const res = await fetch(
+        `${BASE_URL}/directory/${dirPath || ""}${directoryName}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.message);
+        return;
+      }
+      toast.success("Directory created successfully");
+
+      setDirectoryName("");
+      setIsCreatingDirectory(false);
+      getDirectoryItems();
+    } catch (err) {
+      console.error(err);
+      toast.error("Error creating directory");
+    } finally {
+      setDirectoryName("");
+      setIsCreatingDirectory(false);
+    }
+  }
 
   return (
-    <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-900 p-6 flex justify-center">
-      <div className="absolute z-900 bg-neutral-900/5">
-        <form action=""></form>
+    <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-900 p-6 flex justify-center overflow-hidden">
+      <ModeToggle />
+      <div
+        className={cn(
+          "fixed inset-0 z-50 bg-black/50 flex items-center justify-center transition-opacity",
+          isCreatingDirectory
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none",
+        )}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            createDirectory();
+          }}
+          className="flex gap-3 bg-white w-80 items-center justify-center flex-col rounded-xl p-6 border border-gray-300 shadow-lg"
+        >
+          <input
+            type="text"
+            value={directoryName}
+            onChange={(e) => setDirectoryName(e.target.value)}
+            className="border border-gray-300 w-full rounded-md p-2 text-lg"
+            placeholder="Folder name"
+            autoFocus
+          />
+
+          <Button type="submit" className="w-full">
+            Save
+          </Button>
+        </form>
       </div>
       <div className="w-full max-w-4xl space-y-6">
         {/* HEADER */}
@@ -153,7 +215,7 @@ export default function DirectoryView() {
           </Link>
           <div className="flex gap-4 justify-center items-center">
             <Button
-              // onClick={handleCreateFileBtnClick}
+              onClick={openCreateDirectoryModal}
               asChild
               variant={"ghost"}
               className="gap-2 cursor-pointer"
@@ -224,7 +286,7 @@ export default function DirectoryView() {
                       <div className="w-50 mr-10">
                         {!isDirectory ? (
                           <Link
-                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 items-center justify-center border border-neutral-500 rounded-xl"
+                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 items-center justify-center border border-neutral-500 rounded-xl"
                             to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
                             target="_blank"
                           >
@@ -233,7 +295,7 @@ export default function DirectoryView() {
                           </Link>
                         ) : (
                           <Link
-                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 items-center justify-center border border-neutral-500 rounded-xl"
+                            className="w-full py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 items-center justify-center border border-neutral-500 rounded-xl"
                             to={`./${item}`}
                           >
                             <ExternalLink size={14} className="mr-2" />

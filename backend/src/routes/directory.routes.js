@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { readdir, stat } from "node:fs/promises";
-import path from "path";
+import { readdir, stat, mkdir } from "node:fs/promises";
 
 const router = Router();
 
@@ -40,8 +39,19 @@ router.get("/?*", async (req, res) => {
 });
 
 router.post("/?*", async (req, res) => {
-  const {0: dirname} = req.params;
-  
-})
+  const { 0: dirname } = req.params;
+  try {
+    const newDirPath = `${storagePath}/${dirname}`;
+    await mkdir(newDirPath);
+    res.status(201).json({
+      message: "Directory created successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 
 export default router;
