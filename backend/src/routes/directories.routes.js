@@ -8,6 +8,6 @@ const router = Router();
 
 router.get("/?*", getDirectoryContents);
 
-router.post("/?*", createDirectory);
+router.post("/*", createDirectory);
 
 export default router;

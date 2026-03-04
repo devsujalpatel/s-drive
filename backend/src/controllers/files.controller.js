@@ -25,7 +25,12 @@ export const readFile = async (req, res) => {
   } else {
     res.setHeader("Content-Disposition", `inline; filename="${filePath}"`);
   }
-  res.sendFile(`${storagePath}/${filePath}`);
+  res.sendFile(`${storagePath}/${filePath}`, (err) => {
+    if (err) {
+      console.error(err);
+      res.status(404).json({ message: "File not found" });
+    }
+  });
 };
 
 // Update

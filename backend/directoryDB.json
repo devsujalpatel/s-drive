@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "name": "root",
+    "parentDirId": null,
+    "content": {
+      "files": [10],
+      "directories": [11, 12]
+    }
+  },
+  {
+    "id": 2,
+    "name": "Image",
+    "parentDirId": 1,
+    "content": {
+      "files": [10],
+      "directories": [11, 12]
+    }
+  },
+  {
+    "id": 3,
+    "name": "Folders",
+    "parentDirId": 3,
+    "content": {
+      "files": [10],
+      "directories": [11, 12]
+    }
+  }
+]
