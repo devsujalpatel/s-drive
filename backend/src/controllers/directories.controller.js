@@ -1,9 +1,10 @@
 import { readdir, stat, mkdir } from "node:fs/promises";
+import path from "node:path";
 
 const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
 
 export const getDirectoryContents = async (req, res) => {
-  const { 0: dirname } = req.params;
+  const dirname = path.join("/", req.params[0]);
   const fullDirPath = `${storagePath}/${dirname ? dirname : ""}`;
   try {
     const filesList = await readdir(fullDirPath);
@@ -31,7 +32,7 @@ export const getDirectoryContents = async (req, res) => {
 };
 
 export const createDirectory = async (req, res) => {
-  const { 0: dirname } = req.params;
+  const dirname = path.join("/", req.params[0]);
   try {
     const newDirPath = `${storagePath}/${dirname}`;
     await mkdir(newDirPath);

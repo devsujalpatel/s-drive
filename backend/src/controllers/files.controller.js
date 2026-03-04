@@ -1,4 +1,3 @@
-import { Router } from "express";
 import { rename } from "fs/promises";
 import { createWriteStream } from "fs";
 import path from "path";
@@ -7,7 +6,7 @@ const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
 const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
 
 export const createFile = async (req, res) => {
-  const { 0: filePath } = req.params;
+  const filePath = path.join("/", req.params[0]);
   const writeStream = createWriteStream(`${storagePath}/${filePath}`);
   req.pipe(writeStream);
   req.on("end", () => {
@@ -19,7 +18,7 @@ export const createFile = async (req, res) => {
 
 // Read
 export const readFile = async (req, res) => {
-  const { 0: filePath } = req.params;
+  const filePath = path.join("/", req.params[0]);
 
   if (req.query.action === "download") {
     res.setHeader("Content-Disposition", `attachment; filename="${filePath}"`);
@@ -31,18 +30,14 @@ export const readFile = async (req, res) => {
 
 // Update
 export const updateFile = async (req, res) => {
-  const { 0: filePath } = req.params; // e.g. images/file.png
+  const filePath = path.join("/", req.params[0]);
   const { newFilename } = req.body;
 
   try {
     const oldFullPath = path.join("storage", filePath);
-
     const dir = path.dirname(filePath); // "images"
-
     const newFullPath = path.join("storage", dir, newFilename);
-
     await rename(oldFullPath, newFullPath);
-
     res.json({ message: "Renamed" });
   } catch (err) {
     console.error(err);
@@ -51,11 +46,9 @@ export const updateFile = async (req, res) => {
 };
 
 export const deleteFile = async (req, res) => {
-  const { 0: filePath } = req.params;
-  const pathsArr = filePath.split("/");
-  const filename = pathsArr[pathsArr.length - 1];
+  const filePath = path.join("/", req.params[0]);
+  const filename = path.basename(filePath);
   const newPath = `${trashPath}/${filename}`;
-
   try {
     await rename(`${storagePath}/${filePath}`, newPath);
     res.status(204).json({

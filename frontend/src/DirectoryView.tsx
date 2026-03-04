@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,34 +45,31 @@ export default function DirectoryView() {
 
   const { "*": dirPath } = useParams();
 
-  async function getDirectoryItems() {
+  const getDirectoryItems = useCallback(async () => {
     try {
       setLoading(true);
+
       const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
-      // ❌ Folder not found
+
       if (res.status === 404) {
         setDirectoryItems([]);
-        setLoading(false);
-        return "Folder Not Found";
+        return;
       }
 
-      // ❌ Other server errors
-      if (!res.ok) {
-        throw new Error("Something went wrong");
-      }
-      const data: DirectoryItems[] = await res.json();
+      if (!res.ok) throw new Error("Server error");
+
+      const data = await res.json();
       setDirectoryItems(data);
     } catch (err) {
-      toast.error("Error in loading directory");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }
+  }, [dirPath]);
 
   useEffect(() => {
     getDirectoryItems();
-  }, [dirPath]);
+  }, [getDirectoryItems]);
 
   async function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) return;
