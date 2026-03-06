@@ -7,7 +7,7 @@ export const app = express();
 app.disable("x-powered-by");
 app.use(express.json());
 
-// Enabling Cors from anywhere
+// Enabling Cors from frontend url
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -19,4 +19,4 @@ import filesRouter from "./routes/files.routes.js";
 import directroyRouter from "./routes/directories.routes.js";
 
 app.use("/api/v1/files", filesRouter); // files routes
-app.use("/api/v1/directory", directroyRouter); // files routes
+app.use("/api/v1/directory", directroyRouter); // directory routes
