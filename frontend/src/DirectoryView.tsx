@@ -33,7 +33,7 @@ interface DirectoryItems {
 }
 
 export default function DirectoryView() {
-  const URL = "http://localhost:4000";
+  const URL = import.meta.env.VITE_API_URL;
   const BASE_URL = `${URL}/api/v1`;
   const [directoryItems, setDirectoryItems] = useState<DirectoryItems[]>([]);
   const [progress, setProgress] = useState(0);
@@ -169,18 +169,18 @@ export default function DirectoryView() {
             e.preventDefault();
             createDirectory();
           }}
-          className="flex gap-3 bg-white w-80 items-center justify-center flex-col rounded-xl p-6 border border-gray-300 shadow-lg"
+          className="flex gap-3 bg-white dark:bg-neutral-800 w-80 items-center justify-center flex-col rounded-xl p-6 border border-gray-300 shadow-lg dark:border-neutral-700"
         >
           <input
             type="text"
             value={directoryName}
             onChange={(e) => setDirectoryName(e.target.value)}
-            className="border border-gray-300 w-full rounded-md p-2 text-lg"
+            className="border border-gray-300 dark:border-neutral-600 w-full rounded-md p-2 text-base"
             placeholder="Folder name"
             autoFocus
           />
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full ">
             Save
           </Button>
         </form>

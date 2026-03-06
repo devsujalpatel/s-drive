@@ -2,8 +2,9 @@ import { rename } from "fs/promises";
 import { createWriteStream } from "fs";
 import path from "path";
 
-const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
-const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
+const cwd = process.cwd();
+const storagePath = `${cwd}/storage`;
+const trashPath = `${cwd}/trash`;
 
 export const createFile = async (req, res) => {
   const filePath = path.join("/", req.params[0]);

@@ -1,7 +1,8 @@
 import { readdir, stat, mkdir } from "node:fs/promises";
 import path from "node:path";
 
-const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
+const cwd = process.cwd();
+const storagePath = `${cwd}/storage`
 
 export const getDirectoryContents = async (req, res) => {
   const dirname = path.join("/", req.params[0]);
