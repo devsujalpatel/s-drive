@@ -13,12 +13,12 @@ const router = Router();
 router.post("/:filename", createFile);
 
 // Read
-router.get("/*", readFile);
+router.get("/:id", readFile);
 
 // Update
-router.patch("/*", updateFile);
+router.patch("/:id", updateFile);
 
 // Delete
-router.delete("/*", deleteFile);
+router.delete("/:id", deleteFile);
 
 export default router;

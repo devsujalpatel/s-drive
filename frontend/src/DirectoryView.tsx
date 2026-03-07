@@ -77,7 +77,7 @@ export default function DirectoryView() {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", `${BASE_URL}/files/${dirPath}/${file.name}`, true);
+    xhr.open("POST", `${BASE_URL}/file/${dirPath}/${file.name}`, true);
 
     xhr.upload.addEventListener("progress", (e) => {
       setProgress(Number(((e.loaded / e.total) * 100).toFixed(0)));
@@ -93,7 +93,7 @@ export default function DirectoryView() {
   }
 
   async function handleDelete(filename: string) {
-    await fetch(`${BASE_URL}/files/${dirPath}/${filename}`, {
+    await fetch(`${BASE_URL}/file/${dirPath}/${filename}`, {
       method: "DELETE",
     });
     getDirectoryItems();
@@ -107,7 +107,7 @@ export default function DirectoryView() {
   async function saveFilename() {
     if (!editingFile) return;
 
-    await fetch(`${BASE_URL}/files/${dirPath}/${editingFile}`, {
+    await fetch(`${BASE_URL}/file/${dirPath}/${editingFile}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newFilename: `${newFilename}` }),
@@ -265,7 +265,7 @@ export default function DirectoryView() {
                         {!isDirectory ? (
                           <Link
                             className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
-                            to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
+                            to={`${BASE_URL}/file${dirPath}/${item}?action=open`}
                             target="_blank"
                           >
                             <ExternalLink size={14} className="mr-2" />
@@ -297,7 +297,7 @@ export default function DirectoryView() {
                         <DropdownMenuContent align="end">
                           {!isDirectory ? (
                             <Link
-                              to={`${BASE_URL}/files/${dirPath}/${item}?action=open`}
+                              to={`${BASE_URL}/file/${dirPath}/${item}?action=open`}
                               target="_blank"
                             >
                               <DropdownMenuItem>
@@ -316,7 +316,7 @@ export default function DirectoryView() {
 
                           {!isDirectory && (
                             <Link
-                              to={`${BASE_URL}/files/${dirPath}/${item}?action=download`}
+                              to={`${BASE_URL}/file/${dirPath}/${item}?action=download`}
                             >
                               <DropdownMenuItem>
                                 <Download size={14} className="mr-2" />
