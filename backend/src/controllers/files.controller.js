@@ -7,24 +7,28 @@ import filesData from "../../fileDB.json" with { type: "json" };
 
 const cwd = process.cwd();
 const storagePath = `${cwd}/storage`;
-const trashPath = `${cwd}/trash`;
+
 
 export const createFile = async (req, res) => {
   const { filename } = req.params;
-  const ext = path.extname(filename);
+  const extenstion = path.extname(filename);
+
   try {
     const id = crypto.randomUUID();
-    const fullFileName = `${id}${ext}`;
+    const fullFileName = `${id}${extenstion}`;
     const writeStream = createWriteStream(`${storagePath}/${fullFileName}`);
-    req.pipe(writeStream);
+    req.pipe(writeStream)
     req.on("end", async () => {
       filesData.push({
         id,
-        ext,
+        extenstion,
         name: filename,
       });
+      if (!filesData) {
+        return res.status(404).json({ message: "NO FILE DATA" });
+      }
       await writeFile("./fileDB.json", JSON.stringify(filesData));
-      res.status(201).json({
+      return res.status(201).json({
         message: "File uploaded",
       });
     });
@@ -37,18 +41,23 @@ export const createFile = async (req, res) => {
 // Read
 export const readFile = async (req, res) => {
   const { id } = req.params;
-  const fileData = filesData.find((f) => f.id === id);
-  console.log(fileData)
+  const fileData = filesData.find((file) => file.id === id);
   if (!fileData) {
     return res.status(404).json({ message: "File not found" });
   }
-  const filePath = `${id}`;
+
   if (req.query.action === "download") {
-    res.setHeader("Content-Disposition", `attachment; filename="${filePath}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${id}${fileData.extenstion}"`,
+    );
   } else {
-    res.setHeader("Content-Disposition", `inline; filename="${filePath}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${id}${fileData.extenstion}"`,
+    );
   }
-  res.sendFile(`${storagePath}/${filePath}`, (err) => {
+  res.sendFile(`${storagePath}/${id}${fileData.extenstion}`, (err) => {
     if (err) {
       console.error(err);
       res.status(404).json({ message: "File not found" });
