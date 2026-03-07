@@ -1,16 +1,30 @@
-import { rename } from "fs/promises";
+import { rename, writeFile } from "fs/promises";
 import { createWriteStream } from "fs";
 import path from "path";
+import crypto from "crypto"
+
+import  filesData from "../../fileDB.json" with {type: "json"}
 
 const cwd = process.cwd();
 const storagePath = `${cwd}/storage`;
 const trashPath = `${cwd}/trash`;
 
 export const createFile = async (req, res) => {
-  const filePath = path.join("/", req.params[0]);
-  const writeStream = createWriteStream(`${storagePath}/${filePath}`);
+  const { filename } = req.params;
+  const ext = path.extname(filename);
+  const id = crypto.randomUUID();
+  console.log(filesData)
+  const fullFileName = `${id}${ext}`
+  const writeStream = createWriteStream(`${storagePath}/${fullFileName}`);
   req.pipe(writeStream);
-  req.on("end", () => {
+  req.on("end",async () => {
+    filesData.push({
+      id,
+      ext,
+      name: filename,
+    })
+    console.log(filesData)
+    await writeFile( "./fileDB.json", JSON.stringify(filesData))
     res.status(201).json({
       message: "File uploaded",
     });

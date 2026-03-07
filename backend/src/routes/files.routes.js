@@ -9,10 +9,8 @@ import {
 
 const router = Router();
 
-const trashPath = "/Users/zoro/Desktop/Coding/s-drive/backend/trash";
-const storagePath = "/Users/zoro/Desktop/Coding/s-drive/backend/storage";
 // Create
-router.post("/*", createFile);
+router.post("/:filename", createFile);
 
 // Read
 router.get("/*", readFile);

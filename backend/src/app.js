@@ -24,5 +24,5 @@ import filesRouter from "./routes/files.routes.js";
 import directroyRouter from "./routes/directories.routes.js";
 
 
-app.use("/api/v1/files", filesRouter); // files routes
+app.use("/api/v1/file", filesRouter); // files routes
 app.use("/api/v1/directory", directroyRouter); // directory routes
