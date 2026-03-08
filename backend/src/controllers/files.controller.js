@@ -1,4 +1,4 @@
-import { rename, writeFile } from "fs/promises";
+import { rm, writeFile } from "fs/promises";
 import { createWriteStream } from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -72,7 +72,6 @@ export const updateFile = async (req, res) => {
 
   const fileData = filesData.find((file) => file.id === id);
   fileData.name = newFilename;
-
   try {
     await writeFile("./fileDB.json", JSON.stringify(filesData));
     res.json({ message: "File Renamed successfully" });
@@ -83,12 +82,15 @@ export const updateFile = async (req, res) => {
 };
 
 export const deleteFile = async (req, res) => {
-  const filePath = path.join("/", req.params[0]);
-  const filename = path.basename(filePath);
-  const newPath = `${trashPath}/${filename}`;
+  const { id } = req.params;
+  const fileIndex = filesData.findIndex((file) => file.id === id);
+  const fileData = filesData[fileIndex];
+
   try {
-    await rename(`${storagePath}/${filePath}`, newPath);
-    res.status(204).json({
+    await rm(`${storagePath}/${id}${fileData.extenstion}`);
+    filesData.splice(fileIndex, 1);
+    await writeFile("./fileDB.json", JSON.stringify(filesData));
+    res.status(200).json({
       message: "File Deleted Successfully",
     });
   } catch (error) {
