@@ -11,8 +11,8 @@ const storagePath = `${cwd}/storage`;
 
 export const createFile = async (req, res) => {
   const { filename } = req.params;
+  const parentDirId  = req.headers.parentdirid || directoriesData[0].id;
   const extenstion = path.extname(filename);
-
   try {
     const id = crypto.randomUUID();
     const fullFileName = `${id}${extenstion}`;
@@ -23,11 +23,15 @@ export const createFile = async (req, res) => {
         id,
         extenstion,
         name: filename,
+        parentDirId,
       });
       if (!filesData) {
         return res.status(404).json({ message: "NO FILE DATA" });
       }
+      const parentDirData = directoriesData.find((dirData) => dirData.id === parentDirId)
+      parentDirData.files.push(id);
       await writeFile("./fileDB.json", JSON.stringify(filesData));
+      await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
       return res.status(201).json({
         message: "File uploaded",
       });
