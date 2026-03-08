@@ -7,7 +7,7 @@ import {
 const router = Router();
 
 // Read all directory
-router.get("/:id", getDirectoryContents);
+router.get("{/:id}", getDirectoryContents);
 
 // Create directory
 router.post("/:directoryName", createDirectory);

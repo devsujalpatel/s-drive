@@ -4,10 +4,10 @@ import path from "path";
 import crypto from "crypto";
 
 import filesData from "../../fileDB.json" with { type: "json" };
+import directoriesData from "../../directoryDB.json" with { type: "json" };
 
 const cwd = process.cwd();
 const storagePath = `${cwd}/storage`;
-
 
 export const createFile = async (req, res) => {
   const { filename } = req.params;
@@ -17,7 +17,7 @@ export const createFile = async (req, res) => {
     const id = crypto.randomUUID();
     const fullFileName = `${id}${extenstion}`;
     const writeStream = createWriteStream(`${storagePath}/${fullFileName}`);
-    req.pipe(writeStream)
+    req.pipe(writeStream);
     req.on("end", async () => {
       filesData.push({
         id,
@@ -83,13 +83,18 @@ export const updateFile = async (req, res) => {
 
 export const deleteFile = async (req, res) => {
   const { id } = req.params;
-  const fileIndex = filesData.findIndex((file) => file.id === id);
-  const fileData = filesData[fileIndex];
-
   try {
+    const fileIndex = filesData.findIndex((file) => file.id === id);
+
+    const fileData = filesData[fileIndex];
     await rm(`${storagePath}/${id}${fileData.extenstion}`);
     filesData.splice(fileIndex, 1);
+    const parentDirData = directoriesData.find(
+      (dirData) => dirData.id === fileData.parentDirId,
+    );
+    parentDirData.files = parentDirData.files.filter((fileId) => fileId !== id);
     await writeFile("./fileDB.json", JSON.stringify(filesData));
+    await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
     res.status(200).json({
       message: "File Deleted Successfully",
     });
