@@ -7,9 +7,9 @@ import {
 const router = Router();
 
 // Read all directory
-router.get("/?*", getDirectoryContents);
+router.get("/", getDirectoryContents);
 
 // Create directory
-router.post("/*", createDirectory);
+router.post("/", createDirectory);
 
 export default router;

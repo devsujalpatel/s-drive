@@ -67,15 +67,15 @@ export const readFile = async (req, res) => {
 
 // Update
 export const updateFile = async (req, res) => {
-  const filePath = path.join("/", req.params[0]);
+  const { id } = req.params;
   const { newFilename } = req.body;
 
+  const fileData = filesData.find((file) => file.id === id);
+  fileData.name = newFilename;
+
   try {
-    const oldFullPath = path.join("storage", filePath);
-    const dir = path.dirname(filePath); // "images"
-    const newFullPath = path.join("storage", dir, newFilename);
-    await rename(oldFullPath, newFullPath);
-    res.json({ message: "Renamed" });
+    await writeFile("./fileDB.json", JSON.stringify(filesData));
+    res.json({ message: "File Renamed successfully" });
   } catch (err) {
     console.error(err);
     res.status(404).json({ message: "File not found" });
