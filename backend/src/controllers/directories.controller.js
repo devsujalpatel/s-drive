@@ -8,30 +8,24 @@ const storagePath = `${cwd}/storage`;
 
 export const getDirectoryContents = async (req, res) => {
   const { id } = req.params;
+
   try {
-    if (!id) {
-      const directoryData = directoriesData[0];
-      const files  = directoryData.files.map((fileId) =>
-        filesData.find((file) => file.id === fileId),
-      );
-      return res.json({ ...directoryData, files });
-    }
-    const directoryData = directoriesData.find((directory) => directory.id === id);
-    console.log(directoryData);
+    const directoryData = id
+      ? directoriesData.find((directory) => directory.id === id)
+      : directoriesData[0];
+
     if (!directoryData) {
       return res.status(404).json({ message: "Directory not found" });
     }
-    const files = directoryData.files.map((fileId) =>
-      filesData.find((file) => file.id === fileId),
-    );
-    console.log(files)
-    if (!files) {
-      return res.json("File Not Found")
-    }
+
+    const files = directoryData.files
+      .map((fileId) => filesData.find((file) => file.id === fileId))
+      .filter(Boolean);
+
     return res.json({ ...directoryData, files });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
