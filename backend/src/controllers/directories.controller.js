@@ -1,4 +1,3 @@
-// import { readdir, stat, mkdir } from "node:fs/promises";
 import path from "node:path";
 
 import directoriesData from "../../directoryDB.json" with { type: "json" };
@@ -15,13 +14,21 @@ export const getDirectoryContents = async (req, res) => {
       const files  = directoryData.files.map((fileId) =>
         filesData.find((file) => file.id === fileId),
       );
-      res.json({ ...directoryData, files });
+      return res.json({ ...directoryData, files });
     }
     const directoryData = directoriesData.find((directory) => directory.id === id);
+    console.log(directoryData);
+    if (!directoryData) {
+      return res.status(404).json({ message: "Directory not found" });
+    }
     const files = directoryData.files.map((fileId) =>
       filesData.find((file) => file.id === fileId),
     );
-    res.json({ ...directoryData, files });
+    console.log(files)
+    if (!files) {
+      return res.json("File Not Found")
+    }
+    return res.json({ ...directoryData, files });
   } catch (error) {
     console.error(error);
     res.status(500).json({

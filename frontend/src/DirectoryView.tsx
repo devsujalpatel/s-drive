@@ -27,21 +27,34 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-interface DirectoryItems {
+interface FilesItem {
+  id: string;
   name: string;
-  isDirectory: boolean;
+  extenstion: string;
+  parentDirId: string;
 }
+
+interface DirectoryItem {
+  id: string;
+  parentDirId: string;
+  name: string;
+}
+
 
 export default function DirectoryView() {
   const URL = import.meta.env.VITE_API_URL;
   const BASE_URL = `${URL}/api/v1`;
-  const [directoryItems, setDirectoryItems] = useState<DirectoryItems[]>([]);
-  const [progress, setProgress] = useState(0);
+
+  const [directoriesList, setDirectoriesList] = useState<DirectoryItem[]>([]);
+  const [filesList, setFilesList] = useState<FilesItem[]>([]);
+
   const [newFilename, setNewFilename] = useState("");
   const [editingFile, setEditingFile] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isCreatingDirectory, setIsCreatingDirectory] = useState(false);
   const [directoryName, setDirectoryName] = useState("");
+
+  const [isCreatingDirectory, setIsCreatingDirectory] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const { "*": dirPath } = useParams();
 
@@ -52,14 +65,15 @@ export default function DirectoryView() {
       const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
 
       if (res.status === 404) {
-        setDirectoryItems([]);
+        setDirectoriesList([]);
         return;
       }
 
       if (!res.ok) throw new Error("Server error");
 
       const data = await res.json();
-      setDirectoryItems(data);
+      setDirectoriesList(data.directories);
+      setFilesList(data.files);
     } catch (err) {
       console.error(err);
     } finally {
@@ -242,44 +256,35 @@ export default function DirectoryView() {
         <div className="grid gap-3">
           {loading ? (
             <div>Loading...</div>
-          ) : directoryItems.length > 0 ? (
-            directoryItems.map(
-              ({ name: item, isDirectory }: DirectoryItems) => (
+          ) : filesList.length > 0 ? (
+            filesList.map(
+              ({ name: item, id }) => (
                 <Card
-                  key={item}
+                  key={id}
                   className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800 cursor-pointer"
                 >
                   <CardContent className="flex items-center justify-between">
                     {/* LEFT */}
                     <div className="flex items-center gap-3">
-                      {isDirectory ? (
+                      {/*{isDirectory ? (
                         <Folder size={20} className="text-muted-foreground" />
                       ) : (
                         <FileText size={20} className="text-muted-foreground" />
-                      )}
+                      )}*/}
                       <span className="font-medium truncate">{item}</span>
                     </div>
 
                     <div className="flex">
                       <div className="w-50 mr-10">
-                        {!isDirectory ? (
+
                           <Link
                             className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
-                            to={`${BASE_URL}/file${dirPath}/${item}?action=open`}
-                            target="_blank"
+                            to={`${BASE_URL}/file/${id}`}
                           >
                             <ExternalLink size={14} className="mr-2" />
                             Open
                           </Link>
-                        ) : (
-                          <Link
-                            className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
-                            to={`./${item}`}
-                          >
-                            <ExternalLink size={14} className="mr-2" />
-                            Open
-                          </Link>
-                        )}
+
                       </div>
 
                       {/* RIGHT ACTION MENU */}
@@ -295,35 +300,21 @@ export default function DirectoryView() {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          {!isDirectory ? (
-                            <Link
-                              to={`${BASE_URL}/file/${dirPath}/${item}?action=open`}
-                              target="_blank"
-                            >
+                          <Link to={`${BASE_URL}/file/${id}`} target="_blank">
                               <DropdownMenuItem>
                                 <ExternalLink size={14} className="mr-2" />
                                 Open
                               </DropdownMenuItem>
                             </Link>
-                          ) : (
-                            <Link to={`./${item}`} target="_blank">
-                              <DropdownMenuItem>
-                                <ExternalLink size={14} className="mr-2" />
-                                Open
-                              </DropdownMenuItem>
-                            </Link>
-                          )}
 
-                          {!isDirectory && (
                             <Link
-                              to={`${BASE_URL}/file/${dirPath}/${item}?action=download`}
+                              to={`${BASE_URL}/file/${id}?action=download`}
                             >
                               <DropdownMenuItem>
                                 <Download size={14} className="mr-2" />
                                 Download
                               </DropdownMenuItem>
                             </Link>
-                          )}
 
                           <DropdownMenuItem onClick={() => renameFile(item)}>
                             <Pencil size={14} className="mr-2" />

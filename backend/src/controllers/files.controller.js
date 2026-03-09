@@ -53,7 +53,7 @@ export const readFile = async (req, res) => {
   if (req.query.action === "download") {
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${id}${fileData.extenstion}"`,
+      `attachment; filename="${fileData.name}"`,
     );
   } else {
     res.setHeader(
@@ -62,8 +62,7 @@ export const readFile = async (req, res) => {
     );
   }
   res.sendFile(`${storagePath}/${id}${fileData.extenstion}`, (err) => {
-    if (err) {
-      console.error(err);
+    if (!res.headersSent) {
       res.status(404).json({ message: "File not found" });
     }
   });
