@@ -27,6 +27,14 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 interface FilesItem {
   id: string;
   name: string;
@@ -120,6 +128,7 @@ export default function DirectoryView() {
   async function saveFilename(fileId: string) {
     if (!editingFileId) return;
 
+    console.log(editingFileId);
     await fetch(`${BASE_URL}/file/${fileId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -135,15 +144,16 @@ export default function DirectoryView() {
     setIsCreatingDirectory(true);
   }
 
-  async function createDirectory() {
+  async function createDirectory(parentDirId: string) {
     if (!directoryName.trim()) return;
 
     try {
       const res = await fetch(
-        `${BASE_URL}/directory/${dirPath ? "/" + dirPath : ""}/${directoryName}`,
+        `${BASE_URL}/directory/${!!parentDirId ? parentDirId : ""}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ directoryName: `${directoryName}` }),
         },
       );
 
@@ -169,35 +179,39 @@ export default function DirectoryView() {
   return (
     <div className="min-h-screen relative bg-muted/40 dark:bg-neutral-950 p-6 flex justify-center overflow-hidden">
       <ModeToggle />
-      <div
-        className={cn(
-          "fixed inset-0 z-50 bg-black/50 flex items-center justify-center transition-opacity",
-          isCreatingDirectory
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none",
-        )}
+      <Dialog
+        open={isCreatingDirectory}
+        onOpenChange={() => setIsCreatingDirectory(false)}
       >
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            createDirectory();
-          }}
-          className="flex gap-3 bg-white dark:bg-neutral-800 w-80 items-center justify-center flex-col rounded-xl p-6 border border-gray-300 shadow-lg dark:border-neutral-700"
-        >
-          <input
-            type="text"
-            value={directoryName}
-            onChange={(e) => setDirectoryName(e.target.value)}
-            className="border border-gray-300 dark:border-neutral-600 w-full rounded-md p-2 text-base"
-            placeholder="Folder name"
-            autoFocus
-          />
+        <DialogContent className="sm:max-w-[320px]">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              createDirectory("");
+            }}
+            className="flex flex-col gap-4"
+          >
+            <DialogHeader>
+              <DialogTitle>Create Folder</DialogTitle>
+            </DialogHeader>
 
-          <Button type="submit" className="w-full ">
-            Save
-          </Button>
-        </form>
-      </div>
+            <input
+              type="text"
+              value={directoryName}
+              onChange={(e) => setDirectoryName(e.target.value)}
+              className="border border-gray-300 dark:border-neutral-600 w-full rounded-md p-2 text-base"
+              placeholder="Folder name"
+              autoFocus
+            />
+
+            <DialogFooter>
+              <Button type="submit" className="w-full">
+                Save
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <div className="w-full max-w-4xl space-y-6">
         {/* HEADER */}
         <div className="flex items-center justify-between">
