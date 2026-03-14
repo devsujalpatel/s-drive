@@ -106,8 +106,8 @@ export default function DirectoryView() {
     xhr.send(file);
   }
 
-  async function handleDelete(filename: string) {
-    await fetch(`${BASE_URL}/file/${dirPath}/${filename}`, {
+  async function handleDelete(fileId: string) {
+    await fetch(`${BASE_URL}/file/${fileId}`, {
       method: "DELETE",
     });
     getDirectoryItems();
@@ -254,6 +254,7 @@ export default function DirectoryView() {
 
         {/* FILE LIST */}
         <div className="grid gap-3">
+          
           {loading ? (
             <div>Loading...</div>
           ) : filesList.length > 0 ? (
@@ -322,7 +323,7 @@ export default function DirectoryView() {
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() => handleDelete(item)}
+                            onClick={() => handleDelete(id)}
                             className="text-red-500"
                           >
                             <Trash size={14} className="mr-2" />
