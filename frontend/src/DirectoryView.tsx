@@ -40,7 +40,6 @@ interface DirectoryItem {
   name: string;
 }
 
-
 export default function DirectoryView() {
   const URL = import.meta.env.VITE_API_URL;
   const BASE_URL = `${URL}/api/v1`;
@@ -91,8 +90,8 @@ export default function DirectoryView() {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", `${BASE_URL}/file/${dirPath}/${file.name}`, true);
-
+    xhr.open("POST", `${BASE_URL}/file/${file.name}`, true);
+    // xhr.setRequestHeader("parentDirId", null)
     xhr.upload.addEventListener("progress", (e) => {
       setProgress(Number(((e.loaded / e.total) * 100).toFixed(0)));
     });
@@ -254,88 +253,81 @@ export default function DirectoryView() {
 
         {/* FILE LIST */}
         <div className="grid gap-3">
-          
           {loading ? (
             <div>Loading...</div>
           ) : filesList.length > 0 ? (
-            filesList.map(
-              ({ name: item, id }) => (
-                <Card
-                  key={id}
-                  className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800 cursor-pointer"
-                >
-                  <CardContent className="flex items-center justify-between">
-                    {/* LEFT */}
-                    <div className="flex items-center gap-3">
-                      {/*{isDirectory ? (
+            filesList.map(({ name: item, id }) => (
+              <Card
+                key={id}
+                className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800 cursor-pointer"
+              >
+                <CardContent className="flex items-center justify-between">
+                  {/* LEFT */}
+                  <div className="flex items-center gap-3">
+                    {/*{isDirectory ? (
                         <Folder size={20} className="text-muted-foreground" />
                       ) : (
                         <FileText size={20} className="text-muted-foreground" />
                       )}*/}
-                      <span className="font-medium truncate">{item}</span>
+                    <span className="font-medium truncate">{item}</span>
+                  </div>
+
+                  <div className="flex">
+                    <div className="w-50 mr-10">
+                      <Link
+                        className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
+                        to={`${BASE_URL}/file/${id}`}
+                      >
+                        <ExternalLink size={14} className="mr-2" />
+                        Open
+                      </Link>
                     </div>
 
-                    <div className="flex">
-                      <div className="w-50 mr-10">
+                    {/* RIGHT ACTION MENU */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical size={18} />
+                        </Button>
+                      </DropdownMenuTrigger>
 
-                          <Link
-                            className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
-                            to={`${BASE_URL}/file/${id}`}
-                          >
+                      <DropdownMenuContent align="end">
+                        <Link to={`${BASE_URL}/file/${id}`} target="_blank">
+                          <DropdownMenuItem>
                             <ExternalLink size={14} className="mr-2" />
                             Open
-                          </Link>
-
-                      </div>
-
-                      {/* RIGHT ACTION MENU */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical size={18} />
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <Link to={`${BASE_URL}/file/${id}`} target="_blank">
-                              <DropdownMenuItem>
-                                <ExternalLink size={14} className="mr-2" />
-                                Open
-                              </DropdownMenuItem>
-                            </Link>
-
-                            <Link
-                              to={`${BASE_URL}/file/${id}?action=download`}
-                            >
-                              <DropdownMenuItem>
-                                <Download size={14} className="mr-2" />
-                                Download
-                              </DropdownMenuItem>
-                            </Link>
-
-                          <DropdownMenuItem onClick={() => renameFile(item)}>
-                            <Pencil size={14} className="mr-2" />
-                            Rename
                           </DropdownMenuItem>
+                        </Link>
 
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(id)}
-                            className="text-red-500"
-                          >
-                            <Trash size={14} className="mr-2" />
-                            Delete
+                        <Link to={`${BASE_URL}/file/${id}?action=download`}>
+                          <DropdownMenuItem>
+                            <Download size={14} className="mr-2" />
+                            Download
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardContent>
-                </Card>
-              ),
-            )
+                        </Link>
+
+                        <DropdownMenuItem onClick={() => renameFile(item)}>
+                          <Pencil size={14} className="mr-2" />
+                          Rename
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(id)}
+                          className="text-red-500"
+                        >
+                          <Trash size={14} className="mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           ) : (
             <div>No Files or Folder Found</div>
           )}
