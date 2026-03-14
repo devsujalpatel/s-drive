@@ -48,7 +48,7 @@ export default function DirectoryView() {
   const [filesList, setFilesList] = useState<FilesItem[]>([]);
 
   const [newFilename, setNewFilename] = useState("");
-  const [editingFile, setEditingFile] = useState<string | null>(null);
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
   const [directoryName, setDirectoryName] = useState("");
 
   const [isCreatingDirectory, setIsCreatingDirectory] = useState(false);
@@ -112,21 +112,21 @@ export default function DirectoryView() {
     getDirectoryItems();
   }
 
-  function renameFile(name: string) {
-    setEditingFile(name); // ONLY filename
-    setNewFilename(name);
+  function renameFile(id: string) {
+    setEditingFileId(id); // ONLY filename
+    // setNewFilename();
   }
 
-  async function saveFilename() {
-    if (!editingFile) return;
+  async function saveFilename(fileId: string) {
+    if (!editingFileId) return;
 
-    await fetch(`${BASE_URL}/file/${dirPath}/${editingFile}`, {
+    await fetch(`${BASE_URL}/file/${fileId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newFilename: `${newFilename}` }),
     });
 
-    setEditingFile(null);
+    setEditingFileId(null);
     setNewFilename("");
     getDirectoryItems();
   }
@@ -227,14 +227,14 @@ export default function DirectoryView() {
         </div>
 
         {/* RENAME INPUT */}
-        {editingFile && (
+        {!!editingFileId && (
           <Card>
             <CardContent className="p-4 flex gap-2">
               <Input
                 value={newFilename}
                 onChange={(e) => setNewFilename(e.target.value)}
               />
-              <Button onClick={saveFilename}>Save</Button>
+              <Button onClick={() => saveFilename(editingFileId)}>Save</Button>
             </CardContent>
           </Card>
         )}
@@ -310,7 +310,7 @@ export default function DirectoryView() {
                           </DropdownMenuItem>
                         </Link>
 
-                        <DropdownMenuItem onClick={() => renameFile(item)}>
+                        <DropdownMenuItem onClick={() => renameFile(id)}>
                           <Pencil size={14} className="mr-2" />
                           Rename
                         </DropdownMenuItem>
