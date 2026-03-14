@@ -10,7 +10,7 @@ import {
 const router = Router();
 
 // Create
-router.post("/:filename", createFile);
+router.post("{/:parentDirId}", createFile);
 
 // Read
 router.get("/:id", readFile);

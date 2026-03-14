@@ -10,6 +10,6 @@ const router = Router();
 router.get("{/:id}", getDirectoryContents);
 
 // Create directory
-router.post("/:directoryName", createDirectory);
+router.post("{/:parentDirId}", createDirectory);
 
 export default router;

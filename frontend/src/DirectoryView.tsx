@@ -33,7 +33,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Badge } from "./components/ui/badge";
 
 interface FileItem {
   id: string;
@@ -68,7 +67,7 @@ export default function DirectoryView() {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const { "*": dirPath } = useParams();
+  const { dirId } = useParams();
 
   useEffect(() => {
     const merged: Item[] = [
@@ -93,7 +92,7 @@ export default function DirectoryView() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/directory/${dirPath || ""}`);
+      const res = await fetch(`${BASE_URL}/directory/${dirId || ""}`);
 
       if (res.status === 404) {
         setDirectoriesList([]);
@@ -110,7 +109,7 @@ export default function DirectoryView() {
     } finally {
       setLoading(false);
     }
-  }, [dirPath]);
+  }, [dirId]);
 
   useEffect(() => {
     getDirectoryItems();
@@ -122,8 +121,8 @@ export default function DirectoryView() {
     const file = e.target.files[0];
     const xhr = new XMLHttpRequest();
 
-    xhr.open("POST", `${BASE_URL}/file/${file.name}`, true);
-    // xhr.setRequestHeader("parentDirId", null)
+    xhr.open("POST", `${BASE_URL}/file/${dirId ? dirId : ""}`, true);
+    xhr.setRequestHeader("filename", file.name);
     xhr.upload.addEventListener("progress", (e) => {
       setProgress(Number(((e.loaded / e.total) * 100).toFixed(0)));
     });
@@ -132,6 +131,10 @@ export default function DirectoryView() {
       getDirectoryItems();
       setProgress(0);
       e.target.value = "";
+    });
+    xhr.addEventListener("error", () => {
+      console.log("Upload failed");
+      toast.error("Upload Failed");
     });
 
     xhr.send(file);
@@ -167,7 +170,7 @@ export default function DirectoryView() {
     setIsCreatingDirectory(true);
   }
 
-  async function createDirectory(parentDirId: string) {
+  async function createDirectory(parentDirId: string | undefined) {
     if (!directoryName.trim()) return;
 
     try {
@@ -209,7 +212,7 @@ export default function DirectoryView() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              createDirectory("");
+              createDirectory(dirId);
             }}
             className="flex flex-col gap-4"
           >
@@ -318,7 +321,7 @@ export default function DirectoryView() {
                       to={
                         type === "file"
                           ? `${BASE_URL}/${type}/${id}`
-                          : `/${id}`
+                          : `/directory/${id}`
                       }
                     >
                       <ExternalLink size={14} />
@@ -342,7 +345,7 @@ export default function DirectoryView() {
                           to={
                             type === "file"
                               ? `${BASE_URL}/${type}/${id}`
-                              : `/${id}`
+                              : `/directory/${id}`
                           }
                           target="_blank"
                         >
