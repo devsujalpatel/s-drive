@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { ModeToggle } from "@/components/mode-toggle";
-import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
@@ -34,11 +33,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Badge } from "./components/ui/badge";
 
-interface FilesItem {
+interface FileItem {
   id: string;
   name: string;
-  extenstion: string;
+  extension: string;
   parentDirId: string;
 }
 
@@ -48,12 +48,17 @@ interface DirectoryItem {
   name: string;
 }
 
+type Item =
+  | (FileItem & { type: "file" })
+  | (DirectoryItem & { type: "directory" });
+
 export default function DirectoryView() {
   const URL = import.meta.env.VITE_API_URL;
   const BASE_URL = `${URL}/api/v1`;
 
   const [directoriesList, setDirectoriesList] = useState<DirectoryItem[]>([]);
-  const [filesList, setFilesList] = useState<FilesItem[]>([]);
+  const [filesList, setFilesList] = useState<FileItem[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
 
   const [newFilename, setNewFilename] = useState("");
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
@@ -64,6 +69,25 @@ export default function DirectoryView() {
   const [loading, setLoading] = useState(true);
 
   const { "*": dirPath } = useParams();
+
+  useEffect(() => {
+    const merged: Item[] = [
+      ...directoriesList.map(
+        (d): Item => ({
+          ...d,
+          type: "directory",
+        }),
+      ),
+      ...filesList.map(
+        (f): Item => ({
+          ...f,
+          type: "file",
+        }),
+      ),
+    ];
+
+    setItems(merged);
+  }, [directoriesList, filesList]);
 
   const getDirectoryItems = useCallback(async () => {
     try {
@@ -128,7 +152,6 @@ export default function DirectoryView() {
   async function saveFilename(fileId: string) {
     if (!editingFileId) return;
 
-    console.log(editingFileId);
     await fetch(`${BASE_URL}/file/${fileId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -152,8 +175,7 @@ export default function DirectoryView() {
         `${BASE_URL}/directory/${!!parentDirId ? parentDirId : ""}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ directoryName: `${directoryName}` }),
+          headers: { dirname: `${directoryName}` },
         },
       );
 
@@ -265,39 +287,45 @@ export default function DirectoryView() {
           </Card>
         )}
 
-        {/* FILE LIST */}
         <div className="grid gap-3">
           {loading ? (
             <div>Loading...</div>
-          ) : filesList.length > 0 ? (
-            filesList.map(({ name: item, id }) => (
+          ) : items.length > 0 ? (
+            items.map(({ name: item, id, type }) => (
               <Card
                 key={id}
-                className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800 cursor-pointer"
+                className="hover:shadow-md transition-all border-neutral-300 dark:border-neutral-800"
               >
                 <CardContent className="flex items-center justify-between">
                   {/* LEFT */}
                   <div className="flex items-center gap-3">
-                    {/*{isDirectory ? (
-                        <Folder size={20} className="text-muted-foreground" />
-                      ) : (
-                        <FileText size={20} className="text-muted-foreground" />
-                      )}*/}
+                    {type === "directory" ? (
+                      <Folder size={20} className="text-muted-foreground" />
+                    ) : (
+                      <FileText size={20} className="text-muted-foreground" />
+                    )}
+
                     <span className="font-medium truncate">{item}</span>
+
+                    {/* <Badge variant="secondary" className="ml-2">
+                      {type}
+                    </Badge> */}
                   </div>
 
-                  <div className="flex">
-                    <div className="w-50 mr-10">
-                      <Link
-                        className="w-full dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border  rounded-xl"
-                        to={`${BASE_URL}/file/${id}`}
-                      >
-                        <ExternalLink size={14} className="mr-2" />
-                        Open
-                      </Link>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      className="dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border rounded-xl"
+                      to={
+                        type === "file"
+                          ? `${BASE_URL}/${type}/${id}`
+                          : `/${id}`
+                      }
+                    >
+                      <ExternalLink size={14} />
+                      Open
+                    </Link>
 
-                    {/* RIGHT ACTION MENU */}
+                    {/* ACTION MENU */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
@@ -310,19 +338,28 @@ export default function DirectoryView() {
                       </DropdownMenuTrigger>
 
                       <DropdownMenuContent align="end">
-                        <Link to={`${BASE_URL}/file/${id}`} target="_blank">
+                        <Link
+                          to={
+                            type === "file"
+                              ? `${BASE_URL}/${type}/${id}`
+                              : `/${id}`
+                          }
+                          target="_blank"
+                        >
                           <DropdownMenuItem>
                             <ExternalLink size={14} className="mr-2" />
                             Open
                           </DropdownMenuItem>
                         </Link>
 
-                        <Link to={`${BASE_URL}/file/${id}?action=download`}>
-                          <DropdownMenuItem>
-                            <Download size={14} className="mr-2" />
-                            Download
-                          </DropdownMenuItem>
-                        </Link>
+                        {type === "file" && (
+                          <Link to={`${BASE_URL}/file/${id}?action=download`}>
+                            <DropdownMenuItem>
+                              <Download size={14} className="mr-2" />
+                              Download
+                            </DropdownMenuItem>
+                          </Link>
+                        )}
 
                         <DropdownMenuItem onClick={() => renameFile(id)}>
                           <Pencil size={14} className="mr-2" />
