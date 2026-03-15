@@ -61,6 +61,7 @@ export default function DirectoryView() {
 
   const [newFilename, setNewFilename] = useState("");
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [editingFile, setEditingFile] = useState<string | null>(null);
   const [directoryName, setDirectoryName] = useState("");
 
   const [isCreatingDirectory, setIsCreatingDirectory] = useState(false);
@@ -147,15 +148,21 @@ export default function DirectoryView() {
     getDirectoryItems();
   }
 
-  function renameFile(id: string) {
-    setEditingFileId(id); // ONLY filename
-    // setNewFilename();
+  function renameFile({ id, type }: { id: string; type: string }) {
+    setEditingFileId(id);
+    setEditingFile(type);
   }
 
   async function saveFilename(fileId: string) {
+    let type: string = "";
     if (!editingFileId) return;
+    if (editingFile && editingFile === "directory") {
+      type = "directory";
+    } else {
+      type = "file";
+    }
 
-    await fetch(`${BASE_URL}/file/${fileId}`, {
+    await fetch(`${BASE_URL}/${type}/${fileId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ newFilename: `${newFilename}` }),
@@ -267,15 +274,29 @@ export default function DirectoryView() {
 
         {/* RENAME INPUT */}
         {!!editingFileId && (
-          <Card>
-            <CardContent className="p-4 flex gap-2">
-              <Input
-                value={newFilename}
-                onChange={(e) => setNewFilename(e.target.value)}
-              />
-              <Button onClick={() => saveFilename(editingFileId)}>Save</Button>
-            </CardContent>
-          </Card>
+          <Dialog
+            open={!!editingFileId}
+            onOpenChange={() => setEditingFileId(null)}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Rename File</DialogTitle>
+              </DialogHeader>
+
+              <div className="py-2">
+                <Input
+                  value={newFilename}
+                  onChange={(e) => setNewFilename(e.target.value)}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button onClick={() => saveFilename(editingFileId)}>
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         )}
 
         {/* PROGRESS */}
@@ -307,12 +328,7 @@ export default function DirectoryView() {
                     ) : (
                       <FileText size={20} className="text-muted-foreground" />
                     )}
-
                     <span className="font-medium truncate">{item}</span>
-
-                    {/* <Badge variant="secondary" className="ml-2">
-                      {type}
-                    </Badge> */}
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -364,7 +380,9 @@ export default function DirectoryView() {
                           </Link>
                         )}
 
-                        <DropdownMenuItem onClick={() => renameFile(id)}>
+                        <DropdownMenuItem
+                          onClick={() => renameFile({ id, type })}
+                        >
                           <Pencil size={14} className="mr-2" />
                           Rename
                         </DropdownMenuItem>

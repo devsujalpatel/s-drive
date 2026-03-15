@@ -71,3 +71,30 @@ export const createDirectory = async (req, res) => {
     });
   }
 };
+export const renameDirectory = async (req, res) => {
+  const { dirId } = req.params;
+  const { newFilename } = req.body;
+  if (!newFilename) {
+    return res.json({
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    const directoryData = dirId
+      ? directoriesData.find((directory) => directory.id === dirId)
+      : directoriesData[0];
+
+    directoryData.name = newFilename;
+    await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
+
+    res.status(201).json({
+      message: "Directory created successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+};

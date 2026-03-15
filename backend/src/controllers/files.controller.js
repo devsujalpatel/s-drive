@@ -15,7 +15,7 @@ export const createFile = async (req, res) => {
 
   try {
     const parentDirId = req.params.parentDirId || directoriesData[0].id;
-    console.log(parentDirId)
+    console.log(parentDirId);
     const filename = req.headers["filename"];
 
     if (!filename) {
