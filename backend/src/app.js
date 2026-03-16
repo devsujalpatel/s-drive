@@ -6,9 +6,11 @@ export const app = express();
 
 app.disable("x-powered-by");
 app.use(express.json());
-app.use(express.urlencoded({
-  extended: true,
-}))
+app.use(
+  express.urlencoded({
+    extended: true,
+  }),
+);
 
 // Enabling Cors from frontend url
 app.use(
@@ -17,14 +19,20 @@ app.use(
   }),
 );
 
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.end("Hello world");
-})
+});
 
 // Routes
 import filesRouter from "./routes/files.routes.js";
 import directroyRouter from "./routes/directories.routes.js";
 
-
 app.use("/api/v1/file", filesRouter); // files routes
 app.use("/api/v1/directory", directroyRouter); // directory routes
+
+// Error Handler Middleware
+app.use((err, req, res, next) => {
+  res.status(500).json({
+    message: "Something went wrong",
+  });
+});

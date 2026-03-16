@@ -65,12 +65,12 @@ export const createDirectory = async (req, res) => {
     directoryData.directories.push(id);
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Directory created successfully",
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -78,6 +78,11 @@ export const createDirectory = async (req, res) => {
 
 export const renameDirectory = async (req, res) => {
   const { dirId } = req.params;
+  if (!dirId) {
+    return res.status(400).json({
+      message: "Id is required",
+    });
+  }
   const { newFilename } = req.body;
   if (!newFilename) {
     return res.json({
@@ -93,12 +98,12 @@ export const renameDirectory = async (req, res) => {
     directoryData.name = newFilename;
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Directory created successfully",
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
@@ -106,6 +111,11 @@ export const renameDirectory = async (req, res) => {
 
 export const deleteDirectory = async (req, res) => {
   const { id } = req.params;
+  if (!id) {
+    return res.status(400).json({
+      message: "Id is required",
+    });
+  }
 
   try {
     const dirIndex = directoriesData.findIndex((dir) => dir.id === id);
