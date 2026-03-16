@@ -141,8 +141,8 @@ export default function DirectoryView() {
     xhr.send(file);
   }
 
-  async function handleDelete(fileId: string) {
-    await fetch(`${BASE_URL}/file/${fileId}`, {
+  async function handleDelete({ id, type }: { id: string; type: string }) {
+    await fetch(`${BASE_URL}/${type}/${id}`, {
       method: "DELETE",
     });
     getDirectoryItems();
@@ -388,7 +388,7 @@ export default function DirectoryView() {
                         </DropdownMenuItem>
 
                         <DropdownMenuItem
-                          onClick={() => handleDelete(id)}
+                          onClick={() => handleDelete({ id, type })}
                           className="text-red-500"
                         >
                           <Trash size={14} className="mr-2" />

@@ -4,23 +4,5 @@
     "extension": ".mp4",
     "name": "Holi Meme Video",
     "parentDirId": "b28d96bf-06cf-4ce9-b612-94fdb2be2e22"
-  },
-  {
-    "id": "d182ad58-7b06-480f-ad80-2f6b2b73bcee",
-    "extension": ".png",
-    "name": "icons8-bash-100.png",
-    "parentDirId": "153bb8d2-cd43-43ec-ab95-09a69ac9a8dd"
-  },
-  {
-    "id": "ba62f798-81d0-45ce-879f-c0a802855580",
-    "extension": ".png",
-    "name": "Bash.png",
-    "parentDirId": "153bb8d2-cd43-43ec-ab95-09a69ac9a8dd"
-  },
-  {
-    "id": "a1ce10aa-e660-438b-b5bd-8b2ae8101b0d",
-    "extension": ".mp4",
-    "name": "Holi Meme",
-    "parentDirId": "a14fd8e3-747b-4d79-a74f-97757d3a4e05"
   }
 ]
