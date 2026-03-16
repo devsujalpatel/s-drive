@@ -1,7 +1,11 @@
+import path from "path";
 import directoriesData from "../../directoryDB.json" with { type: "json" };
 import filesData from "../../fileDB.json" with { type: "json" };
 import crypto from "crypto";
-import { writeFile } from "fs/promises";
+import { rm, writeFile } from "fs/promises";
+import { cwd } from "process";
+
+const home = cwd();
 
 export const getDirectoryContents = async (req, res) => {
   const { id } = req.params;
@@ -71,6 +75,7 @@ export const createDirectory = async (req, res) => {
     });
   }
 };
+
 export const renameDirectory = async (req, res) => {
   const { dirId } = req.params;
   const { newFilename } = req.body;
@@ -96,5 +101,59 @@ export const renameDirectory = async (req, res) => {
     res.status(500).json({
       message: "Internal Server Error",
     });
+  }
+};
+
+export const deleteDirectory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const dirIndex = directoriesData.findIndex((dir) => dir.id === id);
+    const directoryData = directoriesData[dirIndex];
+
+    if (!directoryData) {
+      return res.status(404).json("Directory Not Found");
+    }
+
+    // delete child directories
+    for (const childDirId of directoryData.directories) {
+      const childIndex = directoriesData.findIndex((d) => d.id === childDirId);
+      if (childIndex !== -1) {
+        directoriesData.splice(childIndex, 1);
+      }
+    }
+
+    // delete files
+    for (const fileId of directoryData.files) {
+      const fileIndex = filesData.findIndex((file) => file.id === fileId);
+      const fileData = filesData[fileIndex];
+
+      if (fileData) {
+        await rm(`${home}/storage/${fileId}${fileData.extension}`);
+        filesData.splice(fileIndex, 1);
+      }
+    }
+
+    // remove from parent
+    const parentDirData = directoriesData.find(
+      (dir) => dir.id === directoryData.parentDirId,
+    );
+
+    if (parentDirData) {
+      parentDirData.directories = parentDirData.directories.filter(
+        (dirId) => dirId !== id,
+      );
+    }
+
+    // delete self
+    directoriesData.splice(dirIndex, 1);
+
+    await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
+    await writeFile("./fileDB.json", JSON.stringify(filesData));
+
+    res.status(204).json({ message: "Directory Deleted" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
