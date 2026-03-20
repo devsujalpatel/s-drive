@@ -37,10 +37,10 @@ export const getDirectoryContents = async (req, res) => {
 
 export const createDirectory = async (req, res) => {
   const { parentDirId } = req.params;
-  const { dirname } = req.headers;
+  const dirname = req.headers.dirname || "New Folder";
   if (!dirname) {
     return res.status(400).json({
-      message: "All fields are required",
+      message: "Dirname is required",
     });
   }
 
@@ -49,7 +49,19 @@ export const createDirectory = async (req, res) => {
       ? directoriesData.find((directory) => directory.id === parentDirId)
       : directoriesData[0];
 
+    if (!directoryData) {
+      return res.status(404).json({
+        message: "Parent Directory Not Found",
+      });
+    }
+
     const newParentDirId = parentDirId ? parentDirId : directoryData.id;
+
+    if (!newParentDirId) {
+      return res.status(404).json({
+        message: "Parent Directory Not Found",
+      });
+    }
 
     const id = crypto.randomUUID();
 
