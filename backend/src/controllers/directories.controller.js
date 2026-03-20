@@ -1,4 +1,3 @@
-import path from "path";
 import directoriesData from "../../directoryDB.json" with { type: "json" };
 import filesData from "../../fileDB.json" with { type: "json" };
 import crypto from "crypto";
@@ -27,7 +26,7 @@ export const getDirectoryContents = async (req, res) => {
       .map((dirId) => directoriesData.find((dir) => dir.id === dirId))
       .map(({ id, name, parentDirId }) => ({ id, name, parentDirId }));
 
-    return res.json({ ...directoryData, files, directories });
+    return res.status(200).json({ ...directoryData, files, directories });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -40,7 +39,7 @@ export const createDirectory = async (req, res) => {
   const { parentDirId } = req.params;
   const { dirname } = req.headers;
   if (!dirname) {
-    return res.json({
+    return res.status(400).json({
       message: "All fields are required",
     });
   }
@@ -85,7 +84,7 @@ export const renameDirectory = async (req, res) => {
   }
   const { newFilename } = req.body;
   if (!newFilename) {
-    return res.json({
+    return res.status(400).json({
       message: "All fields are required",
     });
   }
