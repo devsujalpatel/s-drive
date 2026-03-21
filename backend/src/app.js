@@ -1,11 +1,13 @@
 import express from "express";
 import "dotenv/config";
 import cors from "cors";
+import cookieParse from "cookie-parser";
 
 export const app = express();
 
 app.disable("x-powered-by");
 app.use(express.json());
+app.use(cookieParse());
 app.use(
   express.urlencoded({
     extended: true,
@@ -16,6 +18,7 @@ app.use(
 app.use(
   cors({
     origin: "http://localhost:5173",
+    credentials: true,
   }),
 );
 

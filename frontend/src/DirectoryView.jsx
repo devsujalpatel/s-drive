@@ -42,8 +42,15 @@ function DirectoryView() {
    * Fetch directory contents
    */
   async function getDirectoryItems() {
-    const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`);
+    const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
+      credentials: "include",
+    });
     const data = await response.json();
+
+    if (data.error === "Unauthorized") {
+      navigate("/login");
+      return;
+    }
 
     // Set directory name
     if (data.name) {

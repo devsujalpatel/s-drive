@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 
@@ -6,8 +6,8 @@ const Login = () => {
   const BASE_URL = "http://localhost:8000/api/v1";
 
   const [formData, setFormData] = useState({
-    email: "anurag@gmail.com",
-    password: "abcd",
+    email: "",
+    password: "",
   });
 
   // serverError will hold the error message from the server
@@ -33,12 +33,13 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch(`${BASE_URL}/login`, {
+      const response = await fetch(`${BASE_URL}/user/login`, {
         method: "POST",
         body: JSON.stringify(formData),
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
 
       const data = await response.json();

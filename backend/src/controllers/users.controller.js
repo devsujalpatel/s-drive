@@ -44,3 +44,38 @@ export const registerUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const loginUser = async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      error: "Email and password are required",
+    });
+  }
+
+  const user = usersData.find((user) => user.email === email);
+  if (!user) {
+    return res.status(400).json({
+      error: "Invalid Credentials",
+    });
+  }
+
+  if (user.password !== password) {
+    return res.status(400).json({
+      error: "Invalid Credentials",
+    });
+  }
+
+  try {
+    res.cookie("uid", user.id, {
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

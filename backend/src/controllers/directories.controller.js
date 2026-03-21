@@ -8,6 +8,13 @@ const home = cwd();
 
 export const getDirectoryContents = async (req, res) => {
   const { id } = req.params;
+  const userId = req.cookies?.uid;
+
+  if (!userId) {
+    return res.status(401).json({
+      error: "Unauthorized",
+    });
+  }
 
   try {
     const directoryData = id
