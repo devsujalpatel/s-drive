@@ -1,5 +1,6 @@
 import directoriesData from "../../directoryDB.json" with { type: "json" };
 import filesData from "../../fileDB.json" with { type: "json" };
+import usersData from "../../usersDB.json" with { type: "json" };
 import crypto from "crypto";
 import { rm, writeFile } from "fs/promises";
 import { cwd } from "process";
@@ -8,14 +9,6 @@ const home = cwd();
 
 export const getDirectoryContents = async (req, res) => {
   const { id } = req.params;
-  const userId = req.cookies?.uid;
-
-  if (!userId) {
-    return res.status(401).json({
-      error: "Unauthorized",
-    });
-  }
-
   try {
     const directoryData = id
       ? directoriesData.find((directory) => directory.id === id)

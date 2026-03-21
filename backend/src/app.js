@@ -30,9 +30,10 @@ app.get("/", (req, res) => {
 import filesRouter from "./routes/files.routes.js";
 import directoryRouter from "./routes/directories.routes.js";
 import userRoutes from "./routes/users.routes.js";
+import { checkAuth } from "./middlewares/auth.middleware.js";
 
-app.use("/api/v1/file", filesRouter); // files routes
-app.use("/api/v1/directory", directoryRouter); // directory routes
+app.use("/api/v1/file", checkAuth, filesRouter); // files routes
+app.use("/api/v1/directory", checkAuth, directoryRouter); // directory routes
 app.use("/api/v1/user", userRoutes); // user routes
 
 // Error Handler Middleware

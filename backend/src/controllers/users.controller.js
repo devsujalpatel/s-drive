@@ -70,6 +70,7 @@ export const loginUser = async (req, res, next) => {
   try {
     res.cookie("uid", user.id, {
       httpOnly: true,
+      maxAge: 60 * 1000 * 60 * 24 * 7, // 7 days
     });
 
     res.status(200).json({

@@ -47,7 +47,7 @@ function DirectoryView() {
     });
     const data = await response.json();
 
-    if (data.error === "Unauthorized") {
+    if (data.error === "Unauthorized" || response.status === 401) {
       navigate("/login");
       return;
     }
