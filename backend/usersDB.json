@@ -1,9 +1,9 @@
 [
   {
-    "id": "randomid",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "abcd",
-    "rootDirId": "rootdirid"
+    "id": "30e498e4-126b-41b9-8f71-14e248066529",
+    "name": "Sujal Patel",
+    "email": "sujal@gmail.com",
+    "password": "1234",
+    "rootDirId": "b33543cb-0a0d-4cab-bcdc-83b9443fc068"
   }
 ]
