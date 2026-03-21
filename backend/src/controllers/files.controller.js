@@ -15,7 +15,7 @@ export const createFile = async (req, res) => {
 
   try {
     const parentDirId = req.params.parentDirId || directoriesData[0].id;
-    const filename = req.headers["filename"];
+    const filename = req.headers["filename"] || "Unnamed File ";
 
     if (!filename) {
       return res.status(400).json({ message: "Filename header missing" });

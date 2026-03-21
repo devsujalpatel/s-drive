@@ -15,7 +15,7 @@ app.use(
 // Enabling Cors from frontend url
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:3000",
   }),
 );
 
@@ -25,10 +25,10 @@ app.get("/", (req, res) => {
 
 // Routes
 import filesRouter from "./routes/files.routes.js";
-import directroyRouter from "./routes/directories.routes.js";
+import directoryRouter from "./routes/directories.routes.js";
 
 app.use("/api/v1/file", filesRouter); // files routes
-app.use("/api/v1/directory", directroyRouter); // directory routes
+app.use("/api/v1/directory", directoryRouter); // directory routes
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {

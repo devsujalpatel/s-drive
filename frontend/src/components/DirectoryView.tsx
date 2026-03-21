@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +25,6 @@ import {
   Folder,
   Plus,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
 
 import {
   Dialog,
@@ -33,6 +33,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 interface FileItem {
   id: string;
@@ -52,7 +55,7 @@ type Item =
   | (DirectoryItem & { type: "directory" });
 
 export default function DirectoryView() {
-  const URL = import.meta.env.VITE_API_URL;
+  const URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const BASE_URL = `${URL}/api/v1`;
 
   const [directoriesList, setDirectoriesList] = useState<DirectoryItem[]>([]);
@@ -68,7 +71,13 @@ export default function DirectoryView() {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const { dirId } = useParams();
+  const params = useParams();
+  console.log(params);
+  const dirId = params.dirId
+    ? Array.isArray(params.dirId)
+      ? params.dirId[0]
+      : params.dirId
+    : null;
 
   useEffect(() => {
     const merged: Item[] = [
@@ -219,7 +228,7 @@ export default function DirectoryView() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              createDirectory(dirId);
+              // createDirectory(dirId);
             }}
             className="flex flex-col gap-4"
           >
@@ -247,7 +256,7 @@ export default function DirectoryView() {
       <div className="w-full max-w-4xl space-y-6">
         {/* HEADER */}
         <div className="flex items-center justify-between">
-          <Link to="/">
+          <Link href="/">
             <h1 className="text-3xl font-semibold tracking-tight">My Files</h1>
           </Link>
           <div className="flex gap-4 justify-center items-center">
@@ -334,7 +343,7 @@ export default function DirectoryView() {
                   <div className="flex items-center gap-2">
                     <Link
                       className="dark:border-neutral-800 border-neutral-300 py-2 px-4 flex gap-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 items-center justify-center border rounded-xl"
-                      to={
+                      href={
                         type === "file"
                           ? `${BASE_URL}/${type}/${id}`
                           : `/directory/${id}`
@@ -358,7 +367,7 @@ export default function DirectoryView() {
 
                       <DropdownMenuContent align="end">
                         <Link
-                          to={
+                          href={
                             type === "file"
                               ? `${BASE_URL}/${type}/${id}`
                               : `/directory/${id}`
@@ -372,7 +381,7 @@ export default function DirectoryView() {
                         </Link>
 
                         {type === "file" && (
-                          <Link to={`${BASE_URL}/file/${id}?action=download`}>
+                          <Link href={`${BASE_URL}/file/${id}?action=download`}>
                             <DropdownMenuItem>
                               <Download size={14} className="mr-2" />
                               Download

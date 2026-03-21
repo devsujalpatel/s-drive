@@ -1,0 +1,9 @@
+[
+  {
+    "id": "randomid",
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "password": "abcd",
+    "rootDirId": "rootdirid"
+  }
+]
