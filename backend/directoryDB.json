@@ -1,9 +1,1 @@
-[
-  {
-    "id": "b28d96bf-06cf-4ce9-b612-94fdb2be2e22",
-    "name": "root",
-    "parentDirId": null,
-    "files": ["544dc54d-eda5-4623-b130-4c05833f079c"],
-    "directories": []
-  }
-]
+[{"id":"b28d96bf-06cf-4ce9-b612-94fdb2be2e22","name":"root","parentDirId":null,"files":["544dc54d-eda5-4623-b130-4c05833f079c"],"directories":["0e3e395a-64d1-4d94-844c-ab364f3d1a0f"]},{"id":"0e3e395a-64d1-4d94-844c-ab364f3d1a0f","name":"Helo","parentDirId":"b28d96bf-06cf-4ce9-b612-94fdb2be2e22","files":["0082ef76-3d8d-442f-9acb-ced2407ad5a5","24ab498a-056d-4e6e-abe4-5dee75ef1c1c"],"directories":[]}]
