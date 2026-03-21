@@ -94,8 +94,8 @@ export const renameDirectory = async (req, res) => {
       message: "Id is required",
     });
   }
-  const { newFilename } = req.body;
-  if (!newFilename) {
+  const { newDirName } = req.body;
+  if (!newDirName) {
     return res.status(400).json({
       message: "All fields are required",
     });
@@ -106,7 +106,7 @@ export const renameDirectory = async (req, res) => {
       ? directoriesData.find((directory) => directory.id === dirId)
       : directoriesData[0];
 
-    directoryData.name = newFilename;
+    directoryData.name = newDirName;
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
 
     return res.status(201).json({
