@@ -12,10 +12,16 @@ const storagePath = `${cwd}/storage`;
 
 export const createFile = async (req, res) => {
   let tempPath;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
 
   try {
-    const parentDirId = req.params.parentDirId || directoriesData[0].id;
-    const filename = req.headers["filename"] || "Unnamed File ";
+    const parentDirId = req.params.parentDirId || user.rootDirId;
+    const filename = req.headers["filename"] || "Untitled";
 
     if (!filename) {
       return res.status(400).json({ message: "Filename header missing" });
@@ -75,9 +81,29 @@ export const createFile = async (req, res) => {
 // Read
 export const readFile = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
   const fileData = filesData.find((file) => file.id === id);
   if (!fileData) {
     return res.status(404).json({ message: "File not found" });
+  }
+
+  const parentDirData = directoriesData.find(
+    (dir) => dir.id === fileData.parentDirId,
+  );
+  if (!parentDirData) {
+    return res.status(404).json({ message: "Parent directory not found" });
+  }
+
+  if (parentDirData.userId !== user.id) {
+    return res
+      .status(403)
+      .json({ message: "You don't have permission to access this file" });
   }
 
   if (req.query.action === "download") {
@@ -101,6 +127,12 @@ export const readFile = async (req, res) => {
 // Update
 export const updateFile = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
   const { newFilename } = req.body;
   if (!id || !newFilename) {
     return res.status(400).json({
@@ -114,6 +146,20 @@ export const updateFile = async (req, res) => {
       message: "File Not Found",
     });
   }
+
+  const parentDirData = directoriesData.find(
+    (dir) => dir.id === fileData.parentDirId,
+  );
+  if (!parentDirData) {
+    return res.status(404).json({ message: "Parent directory not found" });
+  }
+
+  if (parentDirData.userId !== user.id) {
+    return res
+      .status(403)
+      .json({ message: "You don't have permission to access this file" });
+  }
+
   fileData.name = newFilename;
   try {
     await writeFile("./fileDB.json", JSON.stringify(filesData));
@@ -126,6 +172,12 @@ export const updateFile = async (req, res) => {
 
 export const deleteFile = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
   if (!id) {
     return res.status(400).json({
       message: "Id is required",
@@ -140,11 +192,23 @@ export const deleteFile = async (req, res) => {
         message: "File Not Found",
       });
     }
+
+    const parentDirData = directoriesData.find(
+      (dir) => dir.id === fileData.parentDirId,
+    );
+    if (!parentDirData) {
+      return res.status(404).json({ message: "Parent directory not found" });
+    }
+
+    if (parentDirData.userId !== user.id) {
+      return res
+        .status(403)
+        .json({ message: "You don't have permission to access this file" });
+    }
+
     await rm(`${storagePath}/${id}${fileData.extension}`);
     filesData.splice(fileIndex, 1);
-    const parentDirData = directoriesData.find(
-      (dirData) => dirData.id === fileData.parentDirId,
-    );
+
     parentDirData.files = parentDirData.files.filter((fileId) => fileId !== id);
     await writeFile("./fileDB.json", JSON.stringify(filesData));
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
