@@ -1,6 +1,6 @@
 import directoriesData from "../../directoryDB.json" with { type: "json" };
 import filesData from "../../fileDB.json" with { type: "json" };
-import usersData from "../../usersDB.json" with { type: "json" };
+// import usersData from "../../usersDB.json" with { type: "json" };
 import crypto from "crypto";
 import { rm, writeFile } from "fs/promises";
 import { cwd } from "process";
@@ -9,10 +9,14 @@ const home = cwd();
 
 export const getDirectoryContents = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   try {
     const directoryData = id
       ? directoriesData.find((directory) => directory.id === id)
-      : directoriesData[0];
+      : directoriesData.find((directory) => directory.id === user.rootDirId);
 
     if (!directoryData) {
       return res.status(404).json({ message: "Directory not found" });
@@ -38,12 +42,14 @@ export const getDirectoryContents = async (req, res) => {
 export const createDirectory = async (req, res) => {
   const { parentDirId } = req.params;
   const dirname = req.headers.dirname || "New Folder";
-  const userId = req.cookies.uid;
-  if (!userId) {
+  const user = req.user;
+
+  if (!user) {
     return res.status(401).json({
       message: "Unauthorized",
     });
   }
+
   if (!dirname) {
     return res.status(400).json({
       message: "Dirname is required",
@@ -53,7 +59,7 @@ export const createDirectory = async (req, res) => {
   try {
     const directoryData = parentDirId
       ? directoriesData.find((directory) => directory.id === parentDirId)
-      : directoriesData[0];
+      : directoriesData.find((d) => d.id === user.rootDirId);
 
     if (!directoryData) {
       return res.status(404).json({
@@ -61,13 +67,7 @@ export const createDirectory = async (req, res) => {
       });
     }
 
-    const newParentDirId = parentDirId ? parentDirId : directoryData.id;
-
-    if (!newParentDirId) {
-      return res.status(404).json({
-        message: "Parent Directory Not Found",
-      });
-    }
+    const newParentDirId = parentDirId || user.rootDirId;
 
     const id = crypto.randomUUID();
 
@@ -75,12 +75,19 @@ export const createDirectory = async (req, res) => {
       id,
       name: dirname,
       parentDirId: newParentDirId,
-      userId: req.cookies.uid,
+      userId: user.id,
       files: [],
       directories: [],
     });
 
-    directoryData.directories.push(id);
+    const parentDirData = directoriesData.find(
+      (dir) => dir.id === newParentDirId,
+    );
+
+    if (parentDirData) {
+      parentDirData.directories.push(id);
+    }
+
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
 
     return res.status(201).json({
@@ -96,6 +103,12 @@ export const createDirectory = async (req, res) => {
 
 export const renameDirectory = async (req, res) => {
   const { dirId } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
   if (!dirId) {
     return res.status(400).json({
       message: "Id is required",
@@ -111,7 +124,13 @@ export const renameDirectory = async (req, res) => {
   try {
     const directoryData = dirId
       ? directoriesData.find((directory) => directory.id === dirId)
-      : directoriesData[0];
+      : directoriesData.find((directory) => directory.id === user.rootDirId);
+
+    if (!directoryData) {
+      return res.status(404).json({
+        message: "Directory Not Found",
+      });
+    }
 
     directoryData.name = newDirName;
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
@@ -129,6 +148,13 @@ export const renameDirectory = async (req, res) => {
 
 export const deleteDirectory = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+
   if (!id) {
     return res.status(400).json({
       message: "Id is required",
@@ -140,7 +166,13 @@ export const deleteDirectory = async (req, res) => {
     const directoryData = directoriesData[dirIndex];
 
     if (!directoryData) {
-      return res.status(404).json("Directory Not Found");
+      return res.status(404).json({
+        message: "Directory Not Found",
+      });
+    }
+
+    if (directoryData.userId !== user.id) {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     // delete child directories
@@ -179,9 +211,9 @@ export const deleteDirectory = async (req, res) => {
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
     await writeFile("./fileDB.json", JSON.stringify(filesData));
 
-    res.status(204).json({ message: "Directory Deleted" });
+    return res.status(204).json({ message: "Directory Deleted" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };

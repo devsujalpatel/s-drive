@@ -10,6 +10,7 @@ export function checkAuth(req, res, next) {
         error: "Unauthorized",
       });
     }
+    req.user = user;
     next();
   } catch (error) {
     next(error);
