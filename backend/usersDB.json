@@ -1,1 +1,16 @@
-[{"id":"f4b1c428-033a-455f-85b3-ad78d7e4cc54","name":"Sujal Patel","email":"sujal@gmail.com","password":"1234","rootDirId":"cd1ce199-f64b-43d0-9398-904e86b26e6f"},{"id":"f2672fa8-5122-4d7d-bbec-f73c5c9ebce3","name":"Raj Verma","email":"raj@gmail.com","password":"1234","rootDirId":"39653642-f749-437d-b451-dccdd53207b3"}]
+[
+  {
+    "id": "f4b1c428-033a-455f-85b3-ad78d7e4cc54",
+    "name": "Sujal Patel",
+    "email": "sujal@gmail.com",
+    "password": "1234",
+    "rootDirId": "cd1ce199-f64b-43d0-9398-904e86b26e6f"
+  },
+  {
+    "id": "f2672fa8-5122-4d7d-bbec-f73c5c9ebce3",
+    "name": "Raj Verma",
+    "email": "raj@gmail.com",
+    "password": "1234",
+    "rootDirId": "39653642-f749-437d-b451-dccdd53207b3"
+  }
+]

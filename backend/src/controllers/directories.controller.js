@@ -38,6 +38,12 @@ export const getDirectoryContents = async (req, res) => {
 export const createDirectory = async (req, res) => {
   const { parentDirId } = req.params;
   const dirname = req.headers.dirname || "New Folder";
+  const userId = req.cookies.uid;
+  if (!userId) {
+    return res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
   if (!dirname) {
     return res.status(400).json({
       message: "Dirname is required",
@@ -69,6 +75,7 @@ export const createDirectory = async (req, res) => {
       id,
       name: dirname,
       parentDirId: newParentDirId,
+      userId: req.cookies.uid,
       files: [],
       directories: [],
     });
@@ -110,7 +117,7 @@ export const renameDirectory = async (req, res) => {
     await writeFile("./directoryDB.json", JSON.stringify(directoriesData));
 
     return res.status(201).json({
-      message: "Directory created successfully",
+      message: "Directory renamed successfully",
     });
   } catch (error) {
     console.error(error);
