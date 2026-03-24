@@ -1,8 +1,0 @@
-.env 
-node_modules
-.env.local
-./storage
-./trash
-
-storage
-trash

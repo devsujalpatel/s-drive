@@ -1,16 +1,16 @@
 [
-  {
-    "id": "ead47c8b-f668-429d-a79b-dcee8c573323",
-    "name": "Sujal Patel",
-    "email": "sujal@gmail.com",
-    "password": "1234",
-    "rootDirId": "d8225b6e-5cd9-4649-9ca8-f37ff59ccda0"
-  },
-  {
-    "id": "132e5fbb-bedc-473c-a50c-cf8347e2c1cb",
-    "name": "Gamer Gear",
-    "email": "raj@gmail.com",
-    "password": "1234",
-    "rootDirId": "2f3c72b9-4284-422c-9996-02007c0fc1ee"
-  }
+    {
+        "id": "ee30db27-2c38-4d4a-975d-58967eba84de",
+        "name": "Anurag Singh",
+        "email": "anurag@gmail.com",
+        "password": "abcd",
+        "rootDirId": "d1e2f148-82aa-48f3-a824-c7de6580085b"
+    },
+    {
+        "id": "dc738d4e-3970-48a6-a15d-8c65785d6eb4",
+        "name": "ProCodrr",
+        "email": "procodrr@gmail.com",
+        "password": "abcd",
+        "rootDirId": "1e446d5c-3db1-4361-bc17-c4f7820fe487"
+    }
 ]
