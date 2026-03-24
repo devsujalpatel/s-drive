@@ -8,7 +8,7 @@ import {
   FaFileAlt,
 } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import ContextMenu from "../components/ContextMenu";
+import ContextMenu from "./ContextMenu";
 
 function DirectoryItem({
   item,

@@ -2,6 +2,7 @@ import express from "express";
 import { writeFile } from "fs/promises";
 import directoriesData from '../directoriesDB.json' with {type: "json"}
 import usersData from '../usersDB.json' with {type: "json"}
+import checkAuth from "../auth.js";
 
 const router = express.Router();
 
@@ -58,6 +59,18 @@ router.post('/login', async (req, res, next) => {
     maxAge: 60 * 1000 * 60 * 24 * 7
   })
   res.json({message: 'logged in'})
+})
+
+router.get('/', checkAuth, (req, res) => {
+  res.status(200).json({
+    name: req.user.name,
+    email: req.user.email,
+  })
+})
+
+router.post('/logout', (req, res) => {
+  res.clearCookie('uid')
+  res.status(204).end()
 })
 
 export default router;
