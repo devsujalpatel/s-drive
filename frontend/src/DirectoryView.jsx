@@ -7,7 +7,7 @@ import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
 
 function DirectoryView() {
-  const BASE_URL = "http://localhost:4000";
+  const BASE_URL = "http://localhost:8000";
   const { dirId } = useParams();
   const navigate = useNavigate();
 

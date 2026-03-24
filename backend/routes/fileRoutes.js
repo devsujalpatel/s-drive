@@ -5,8 +5,12 @@ import path from "path";
 import crypto from "crypto"; // Ensure you're importing crypto if not already
 import directoriesData from "../directoriesDB.json" with { type: "json" };
 import filesData from "../filesDB.json" with { type: "json" };
+import validateId from "../middlewares/validateid.midlleware.js";
 
 const router = express.Router();
+
+router.param("id", validateId);
+router.param("parentDirId", validateId);
 
 // ================================
 // CREATE

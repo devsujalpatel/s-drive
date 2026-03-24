@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import directoryRoutes from "./routes/directoryRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import checkAuth from "./auth.js";
+import checkAuth from "./middlewares/auth.middleware.js";
 
 const app = express();
 
@@ -26,6 +26,6 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ message: "Something went wrong!!" });
 });
 
-app.listen(4000, () => {
+app.listen(8000, () => {
   console.log(`Server Started`);
 });
