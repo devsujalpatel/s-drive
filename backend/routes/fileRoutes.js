@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/:parentDirId?", (req, res, next) => {
   const parentDirId = req.params.parentDirId || req.user.rootDirId;
   const parentDirData = directoriesData.find(
-    (directoryData) => directoryData.id === parentDirId
+    (directoryData) => directoryData.id === parentDirId,
   );
 
   // Check if parent directory exists
@@ -24,9 +24,9 @@ router.post("/:parentDirId?", (req, res, next) => {
 
   // Check if the directory belongs to the user
   if (parentDirData.userId !== req.user.id) {
-    return res
-      .status(403)
-      .json({ error: "You do not have permission to upload to this directory." });
+    return res.status(403).json({
+      error: "You do not have permission to upload to this directory.",
+    });
   }
 
   const filename = req.headers.filename || "untitled";
@@ -70,21 +70,27 @@ router.get("/:id", (req, res) => {
   }
 
   // Check parent directory ownership
-  const parentDir = directoriesData.find((dir) => dir.id === fileData.parentDirId);
+  const parentDir = directoriesData.find(
+    (dir) => dir.id === fileData.parentDirId,
+  );
   if (!parentDir) {
     return res.status(404).json({ error: "Parent directory not found!" });
   }
   if (parentDir.userId !== req.user.id) {
-    return res.status(403).json({ error: "You don't have access to this file." });
+    return res
+      .status(403)
+      .json({ error: "You don't have access to this file." });
   }
+
+  const filePath = `${process.cwd()}/storage/${id}${fileData.extension}`;
 
   // If "download" is requested, set the appropriate headers
   if (req.query.action === "download") {
-    res.set("Content-Disposition", `attachment; filename=${fileData.name}`);
+    res.download(filePath, fileData.name);
   }
 
   // Send file
-  return res.sendFile(`${process.cwd()}/storage/${id}${fileData.extension}`, (err) => {
+  return res.sendFile(filePath, (err) => {
     if (!res.headersSent && err) {
       return res.status(404).json({ error: "File not found!" });
     }
@@ -104,12 +110,16 @@ router.patch("/:id", async (req, res, next) => {
   }
 
   // Check parent directory ownership
-  const parentDir = directoriesData.find((dir) => dir.id === fileData.parentDirId);
+  const parentDir = directoriesData.find(
+    (dir) => dir.id === fileData.parentDirId,
+  );
   if (!parentDir) {
     return res.status(404).json({ error: "Parent directory not found!" });
   }
   if (parentDir.userId !== req.user.id) {
-    return res.status(403).json({ error: "You don't have access to this file." });
+    return res
+      .status(403)
+      .json({ error: "You don't have access to this file." });
   }
 
   // Perform rename
@@ -138,12 +148,16 @@ router.delete("/:id", async (req, res, next) => {
   const fileData = filesData[fileIndex];
 
   // Check parent directory ownership
-  const parentDir = directoriesData.find((dir) => dir.id === fileData.parentDirId);
+  const parentDir = directoriesData.find(
+    (dir) => dir.id === fileData.parentDirId,
+  );
   if (!parentDir) {
     return res.status(404).json({ error: "Parent directory not found!" });
   }
   if (parentDir.userId !== req.user.id) {
-    return res.status(403).json({ error: "You don't have access to this file." });
+    return res
+      .status(403)
+      .json({ error: "You don't have access to this file." });
   }
 
   try {
