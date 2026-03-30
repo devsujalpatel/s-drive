@@ -45,6 +45,7 @@ const Register = () => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // to include cookies in the request
       });
 
       const data = await response.json();

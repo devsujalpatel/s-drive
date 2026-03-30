@@ -11,6 +11,7 @@ router.param("parentDirId", validateId);
 
 // Read
 router.get("/:id?", async (req, res) => {
+  const db = req.db;
   const user = req.user;
   const id = req.params.id || user.rootDirId;
 
