@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 
 const Login = () => {
-  const BASE_URL = "http://localhost:4000";
+  const BASE_URL = "http://localhost:8000";
 
   const [formData, setFormData] = useState({
     email: "",

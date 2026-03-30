@@ -17,7 +17,7 @@ function DirectoryHeader({
   disabled = false,
 }) {
   // Use a constant for the API base URL
-  const BASE_URL = "http://localhost:4000";
+  const BASE_URL = "http://localhost:8000";
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
