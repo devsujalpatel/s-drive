@@ -78,23 +78,21 @@ router.post("/:parentDirId?", async (req, res, next) => {
 
 router.patch("/:id", async (req, res, next) => {
   const user = req.user;
+  const db = req.db;
   const { id } = req.params;
+  if (!id)
+    return res.status(400).json({ message: "Directory ID is required!" });
   const { newDirName } = req.body;
 
-  const dirData = directoriesData.find((dir) => dir.id === id);
-  if (!dirData)
-    return res.status(404).json({ message: "Directory not found!" });
-
-  // Check if the directory belongs to the user
-  if (dirData.userId !== user.id) {
-    return res
-      .status(403)
-      .json({ message: "You are not authorized to rename this directory!" });
-  }
-
-  dirData.name = newDirName;
   try {
-    await writeFile("./directoriesDB.json", JSON.stringify(directoriesData));
+    const dirCollection = db.collection("directories");
+    console.log(id, newDirName);
+
+    const result = await dirCollection.updateOne(
+      { _id: new ObjectId(id), userId: user._id },
+      { $set: { name: newDirName } },
+    );
+    console.log(result);
     res.status(200).json({ message: "Directory Renamed!" });
   } catch (err) {
     next(err);
