@@ -1,5 +1,4 @@
 import express from "express";
-import usersData from "../usersDB.json" with { type: "json" };
 import checkAuth from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -24,8 +23,6 @@ router.post("/register", async (req, res, next) => {
     const userRootDir = await dirCollection.insertOne({
       name: `root-${email}`,
       parentDirId: null,
-      files: [],
-      directories: [],
     });
 
     const rootDirId = userRootDir.insertedId;

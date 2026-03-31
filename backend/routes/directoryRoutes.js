@@ -3,6 +3,7 @@ import { rm, writeFile } from "fs/promises";
 import directoriesData from "../directoriesDB.json" with { type: "json" };
 import filesData from "../filesDB.json" with { type: "json" };
 import validateId from "../middlewares/validateid.midlleware.js";
+import { ObjectId } from "mongodb";
 
 const router = express.Router();
 
@@ -10,52 +11,65 @@ router.param("id", validateId);
 router.param("parentDirId", validateId);
 
 // Read
-router.get("/:id?", async (req, res) => {
-  const db = req.db;
-  const user = req.user;
-  const id = req.params.id || user.rootDirId;
+router.get("/:id?", async (req, res, next) => {
+  try {
+    const db = req.db;
+    const user = req.user;
+    const id = req.params.id || user.rootDirId;
+    const dirCollection = db.collection("directories");
+    const fileCollection = db.collection("files");
 
-  // Find the directory and verify ownership
-  const directoryData = directoriesData.find(
-    (directory) => directory.id === id && directory.userId === user.id,
-  );
-  if (!directoryData) {
-    return res
-      .status(404)
-      .json({ error: "Directory not found or you do not have access to it!" });
+    const directoryData = await dirCollection.findOne({
+      _id: new ObjectId(String(id)),
+    });
+
+    if (!directoryData) {
+      return res.status(404).json({
+        error: "Directory not found or you do not have access to it!",
+      });
+    }
+
+    const directories = await dirCollection
+      .find({ parentDirId: new ObjectId(String(id)) })
+      .toArray();
+
+    // const files = await fileCollection.find({ directoryId: id }).toArray();
+    const files = [];
+
+    return res.status(200).json({
+      ...directoryData,
+      files,
+      directories: directories.map((dir) => ({ ...dir, id: dir._id })),
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const files = directoryData.files.map((fileId) =>
-    filesData.find((file) => file.id === fileId),
-  );
-  const directories = directoryData.directories
-    .map((dirId) => directoriesData.find((dir) => dir.id === dirId))
-    .map(({ id, name }) => ({ id, name }));
-
-  return res.status(200).json({ ...directoryData, files, directories });
 });
 
 router.post("/:parentDirId?", async (req, res, next) => {
   const user = req.user;
   const parentDirId = req.params.parentDirId || user.rootDirId;
   const dirname = req.headers.dirname || "New Folder";
-  const id = crypto.randomUUID();
-  const parentDir = directoriesData.find((dir) => dir.id === parentDirId);
-  if (!parentDir)
-    return res
-      .status(404)
-      .json({ message: "Parent Directory Does not exist!" });
-  parentDir.directories.push(id);
-  directoriesData.push({
-    id,
-    name: dirname,
-    parentDirId,
-    files: [],
-    userId: user.id,
-    directories: [],
-  });
+  const db = req.db;
+
   try {
-    await writeFile("./directoriesDB.json", JSON.stringify(directoriesData));
+    const dirCollection = db.collection("directories");
+
+    const parentDir = await dirCollection.findOne({
+      _id: new ObjectId(String(parentDirId)),
+    });
+
+    if (!parentDir)
+      return res
+        .status(404)
+        .json({ message: "Parent Directory Does not exist!" });
+
+    await dirCollection.insertOne({
+      name: dirname,
+      parentDirId,
+      userId: user._id,
+    });
+
     return res.status(200).json({ message: "Directory Created!" });
   } catch (err) {
     next(err);

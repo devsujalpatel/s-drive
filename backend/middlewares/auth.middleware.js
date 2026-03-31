@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 export default async function checkAuth(req, res, next) {
   const { uid } = req.cookies;
   const db = req.db;
