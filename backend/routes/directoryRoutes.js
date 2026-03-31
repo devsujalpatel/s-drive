@@ -33,8 +33,6 @@ router.get("/:id?", async (req, res, next) => {
       .find({ parentDirId: _id })
       .toArray();
 
-    console.log(directories);
-
     // const files = await fileCollection.find({ directoryId: id }).toArray();
     const files = await fileCollection
       .find({
