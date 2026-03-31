@@ -15,12 +15,12 @@ router.get("/:id?", async (req, res, next) => {
   try {
     const db = req.db;
     const user = req.user;
-    const id = req.params.id || user.rootDirId;
+    const _id = req.params.id ? new ObjectId(req.params.id) : user.rootDirId;
     const dirCollection = db.collection("directories");
     const fileCollection = db.collection("files");
 
     const directoryData = await dirCollection.findOne({
-      _id: new ObjectId(String(id)),
+      _id,
     });
 
     if (!directoryData) {
@@ -30,15 +30,21 @@ router.get("/:id?", async (req, res, next) => {
     }
 
     const directories = await dirCollection
-      .find({ parentDirId: new ObjectId(String(id)) })
+      .find({ parentDirId: _id })
       .toArray();
 
+    console.log(directories);
+
     // const files = await fileCollection.find({ directoryId: id }).toArray();
-    const files = [];
+    const files = await fileCollection
+      .find({
+        parentDirId: directoryData._id,
+      })
+      .toArray();
 
     return res.status(200).json({
       ...directoryData,
-      files,
+      files: files.map((file) => ({ ...file, id: file._id })),
       directories: directories.map((dir) => ({ ...dir, id: dir._id })),
     });
   } catch (error) {
@@ -46,9 +52,11 @@ router.get("/:id?", async (req, res, next) => {
   }
 });
 
-router.post("/:parentDirId?", async (req, res, next) => {
+router.post("/:id?", async (req, res, next) => {
   const user = req.user;
-  const parentDirId = req.params.parentDirId || user.rootDirId;
+  const parentDirId = req.params.id
+    ? new ObjectId(req.params.id)
+    : user.rootDirId;
   const dirname = req.headers.dirname || "New Folder";
   const db = req.db;
 
@@ -56,7 +64,7 @@ router.post("/:parentDirId?", async (req, res, next) => {
     const dirCollection = db.collection("directories");
 
     const parentDir = await dirCollection.findOne({
-      _id: new ObjectId(String(parentDirId)),
+      _id: parentDirId,
     });
 
     if (!parentDir)

@@ -200,8 +200,8 @@ function DirectoryView() {
     // Mark it as isUploading: true
     setFilesList((prev) =>
       prev.map((f) =>
-        f.id === currentItem.id ? { ...f, isUploading: true } : f
-      )
+        f.id === currentItem.id ? { ...f, isUploading: true } : f,
+      ),
     );
 
     // Start upload
@@ -335,7 +335,7 @@ function DirectoryView() {
         body: JSON.stringify(
           renameType === "file"
             ? { newFilename: renameValue }
-            : { newDirName: renameValue }
+            : { newDirName: renameValue },
         ),
         credentials: "include",
       });
