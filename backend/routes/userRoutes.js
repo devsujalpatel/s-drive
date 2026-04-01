@@ -1,5 +1,6 @@
 import express from "express";
 import checkAuth from "../middlewares/auth.middleware.js";
+import { ObjectId } from "mongodb";
 
 const router = express.Router();
 
@@ -9,6 +10,8 @@ router.post("/register", async (req, res, next) => {
 
   try {
     const userCollection = db.collection("users");
+    const rootDirId = new ObjectId();
+    const userId = new ObjectId();
     const foundUser = await userCollection.findOne({ email });
     if (foundUser) {
       return res.status(409).json({
@@ -20,23 +23,20 @@ router.post("/register", async (req, res, next) => {
 
     const dirCollection = db.collection("directories");
 
-    const userRootDir = await dirCollection.insertOne({
+    await dirCollection.insertOne({
+      _id: rootDirId,
       name: `root-${email}`,
       parentDirId: null,
+      userId,
     });
 
-    const rootDirId = userRootDir.insertedId;
-
-    const createdUser = await userCollection.insertOne({
+    await userCollection.insertOne({
+      _id: userId,
       name,
       email,
       password,
       rootDirId,
     });
-
-    const userId = createdUser.insertedId;
-
-    await dirCollection.updateOne({ _id: rootDirId }, { $set: { userId } });
 
     res.status(201).json({ message: "User Registered" });
   } catch (err) {
