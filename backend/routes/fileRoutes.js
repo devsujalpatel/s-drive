@@ -1,6 +1,6 @@
 import express from "express";
 import { createWriteStream } from "fs";
-import { rm, writeFile } from "fs/promises";
+import { rm } from "fs/promises";
 import path from "path";
 import validateId from "../middlewares/validateid.midlleware.js";
 import { ObjectId } from "mongodb";
@@ -10,9 +10,7 @@ const router = express.Router();
 router.param("id", validateId);
 router.param("parentDirId", validateId);
 
-// ================================
 // CREATE
-// ================================
 router.post("/:id?", async (req, res, next) => {
   try {
     const parentDirId = req.params.id
@@ -61,9 +59,7 @@ router.post("/:id?", async (req, res, next) => {
   }
 });
 
-// ================================
 // READ
-// ================================
 router.get("/:id", async (req, res, next) => {
   const { id } = req.params;
   const user = req.user;
@@ -97,9 +93,7 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// ================================
 // UPDATE
-// ================================
 router.patch("/:id", async (req, res, next) => {
   const { id } = req.params;
   const user = req.user;
@@ -107,7 +101,15 @@ router.patch("/:id", async (req, res, next) => {
 
   try {
     const fileCollection = db.collection("files");
-    const fileData = await fileCollection.updateOne(
+    const fileData = await fileCollection.findOne({
+      _id: new ObjectId(String(id)),
+      userId: new ObjectId(String(user._id)),
+    });
+
+    if (!fileData) {
+      return res.status(404).json({ error: "File not found!" });
+    }
+    await fileCollection.updateOne(
       {
         _id: new ObjectId(String(id)),
         userId: new ObjectId(String(user._id)),
@@ -119,9 +121,6 @@ router.patch("/:id", async (req, res, next) => {
       },
     );
 
-    if (!fileData) {
-      return res.status(404).json({ error: "File not found!" });
-    }
     return res.status(200).json({ message: "Renamed" });
   } catch (err) {
     err.status = 500;
@@ -129,9 +128,7 @@ router.patch("/:id", async (req, res, next) => {
   }
 });
 
-// ================================
 // DELETE
-// ================================
 router.delete("/:id", async (req, res, next) => {
   const { id } = req.params;
   const user = req.user;
@@ -149,13 +146,13 @@ router.delete("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "File not found!" });
     }
 
+    await rm(`./storage/${id}${fileData.extension}`, { recursive: true });
     await fileCollection.deleteOne({
       _id: new ObjectId(String(id)),
       userId: new ObjectId(String(user._id)),
     });
 
     // Remove file from filesystem
-    await rm(`./storage/${id}${fileData.extension}`, { recursive: true });
     return res.status(200).json({ message: "File Deleted Successfully" });
   } catch (err) {
     next(err);
