@@ -2,7 +2,7 @@ import express from "express";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
-import validateId from "../middlewares/validateid.midlleware.js";
+import validateId from "../middlewares/validated.midlleware.js";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
