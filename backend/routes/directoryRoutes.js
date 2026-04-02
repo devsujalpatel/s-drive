@@ -1,6 +1,6 @@
 import express from "express";
 import { rm } from "fs/promises";
-import validateId from "../middlewares/validated.midlleware.js";
+import validateId from "../middlewares/validated.middleware.js";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
@@ -74,9 +74,15 @@ router.post("/:id?", async (req, res, next) => {
       userId: user._id,
     });
 
-    return res.status(200).json({ message: "Directory Created!" });
+    return res.status(201).json({ message: "Directory Created!" });
   } catch (err) {
-    next(err);
+    if (err.code === 121) {
+      return res.status(400).json({
+        error: "Invalid Fields, please check your input and try again.",
+      });
+    } else {
+      next(err);
+    }
   }
 });
 
