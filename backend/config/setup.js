@@ -2,7 +2,7 @@ import { connectDB } from "./db";
 
 const db = await connectDB();
 
-db.command({
+await db.command({
   create: "users",
   validator: {
     $jsonSchema: {
@@ -31,4 +31,61 @@ db.command({
       additionalProperties: false,
     },
   },
+  validationAction: "error",
+  validationLevel: "strict",
+});
+await db.command({
+  create: "directories",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["_id", "name", "userId", "parentDirId"],
+      properties: {
+        _id: {
+          bsonType: "objectId",
+        },
+        name: {
+          bsonType: "string",
+        },
+        userId: {
+          bsonType: "objectId",
+        },
+        parentDirId: {
+          bsonType: ["objectId", "null"],
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  validationAction: "error",
+  validationLevel: "strict",
+});
+await db.command({
+  create: "files",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["_id", "name", "extension", "userId", "parentDirId"],
+      properties: {
+        _id: {
+          bsonType: "objectId",
+        },
+        name: {
+          bsonType: "string",
+        },
+        extension: {
+          bsonType: "string",
+        },
+        userId: {
+          bsonType: "objectId",
+        },
+        parentDirId: {
+          bsonType: ["objectId", "null"],
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  validationAction: "error",
+  validationLevel: "strict",
 });
