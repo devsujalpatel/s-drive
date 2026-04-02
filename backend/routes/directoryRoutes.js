@@ -1,6 +1,6 @@
 import express from "express";
 import { rm } from "fs/promises";
-import validateId from "../middlewares/validateid.midlleware.js";
+import validateId from "../middlewares/validated.middleware.js";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
