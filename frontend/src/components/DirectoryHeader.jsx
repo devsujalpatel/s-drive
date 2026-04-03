@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaFolderPlus,
   FaUpload,
@@ -108,7 +108,9 @@ function DirectoryHeader({
 
   return (
     <header className="directory-header">
-      <h1>{directoryName}</h1>
+      <Link to="/" className="directory-name-link">
+        <h1 className="directory-name">{directoryName}</h1>
+      </Link>
       <div className="header-links">
         {/* Create Folder (icon button) */}
         <button
