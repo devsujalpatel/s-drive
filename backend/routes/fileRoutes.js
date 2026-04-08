@@ -13,6 +13,7 @@ router.param("parentDirId", validateId);
 // CREATE
 router.post("/:id?", async (req, res, next) => {
   try {
+    const user = req.user;
     const parentDirId = req.params.id
       ? new ObjectId(req.params.id)
       : user.rootDirId;
