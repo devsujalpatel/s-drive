@@ -1,0 +1,21 @@
+{
+  "name": "s-drive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd backend && bun run dev & cd frontend && bun run dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devsujalpatel/s-drive.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/devsujalpatel/s-drive/issues"
+  },
+  "homepage": "https://github.com/devsujalpatel/s-drive#readme"
+}
