@@ -1,5 +1,6 @@
 import express from "express";
 import checkAuth from "../middlewares/auth.middleware.js";
+import { client } from "../config/db.js";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
@@ -8,6 +9,7 @@ router.post("/register", async (req, res, next) => {
   const { name, email, password } = req.body;
   const db = req.db;
 
+  const session = client.startSession()
   try {
     const userCollection = db.collection("users");
     const rootDirId = new ObjectId();
@@ -22,13 +24,18 @@ router.post("/register", async (req, res, next) => {
     }
 
     const dirCollection = db.collection("directories");
+    // Start Transactions 
+
+    session.startTransaction()
+
+
 
     await dirCollection.insertOne({
       _id: rootDirId,
       name: `root-${email}`,
       parentDirId: null,
       userId,
-    });
+    }, { session });
 
     await userCollection.insertOne({
       _id: userId,
@@ -36,10 +43,13 @@ router.post("/register", async (req, res, next) => {
       email,
       password,
       rootDirId,
-    });
+    }, { session });
+
+    session.commitTransaction();
 
     res.status(201).json({ message: "User Registered" });
   } catch (err) {
+    session.abortTransaction();
     if (err.code === 121) {
       return res.status(400).json({
         error: "Invalid Fields, please check your input and try again.",
