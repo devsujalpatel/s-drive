@@ -5,6 +5,7 @@ import directoryRoutes from "./routes/directoryRoutes.js";
 import fileRoutes from "./routes/fileRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import checkAuth from "./middlewares/auth.middleware.js";
+import "dotenv/config";
 
 import { connectDB } from "./config/db.js";
 
