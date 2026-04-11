@@ -24,11 +24,10 @@ router.post("/register", async (req, res, next) => {
     }
 
     const dirCollection = db.collection("directories");
+
     // Start Transactions 
 
     session.startTransaction()
-
-
 
     await dirCollection.insertOne({
       _id: rootDirId,
