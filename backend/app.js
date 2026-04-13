@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import directoryRoutes from "./routes/directoryRoutes.js";
-import fileRoutes from "./routes/fileRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
+import directoryRoutes from "./routes/directory.routes.js";
+import fileRoutes from "./routes/file.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import checkAuth from "./middlewares/auth.middleware.js";
 import "dotenv/config";
 
