@@ -1,16 +1,27 @@
 import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
+import User from "../models/user.model.js";
+import Directory from "../models/directory.model.js";
 
 // Register
 export const registerUser = async (req, res, next) => {
   const { name, email, password } = req.body;
-  const db = req.db;
 
-  const session = client.startSession();
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (password.length < 6) {
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 6 characters long" });
+  }
+
+  const session = await mongoose.startSession();
   try {
-    const userCollection = db.collection("users");
     const rootDirId = new ObjectId();
     const userId = new ObjectId();
-    const foundUser = await userCollection.findOne({ email });
+    const foundUser = await User.findOne({ email });
     if (foundUser) {
       return res.status(409).json({
         error: "User already exists",
@@ -19,38 +30,33 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    const dirCollection = db.collection("directories");
-
     // Start Transactions
 
-    session.startTransaction();
+    await session.withTransaction(async () => {
+      await Directory.insertOne(
+        {
+          _id: rootDirId,
+          name: `root-${email}`,
+          parentDirId: null,
+          userId,
+        },
+        { session },
+      );
 
-    await dirCollection.insertOne(
-      {
-        _id: rootDirId,
-        name: `root-${email}`,
-        parentDirId: null,
-        userId,
-      },
-      { session },
-    );
-
-    await userCollection.insertOne(
-      {
-        _id: userId,
-        name,
-        email,
-        password,
-        rootDirId,
-      },
-      { session },
-    );
-
-    session.commitTransaction();
+      await User.insertOne(
+        {
+          _id: userId,
+          name,
+          email,
+          password,
+          rootDirId,
+        },
+        { session },
+      );
+    });
 
     res.status(201).json({ message: "User Registered" });
   } catch (err) {
-    session.abortTransaction();
     if (err.code === 121) {
       return res.status(400).json({
         error: "Invalid Fields, please check your input and try again.",
@@ -58,6 +64,8 @@ export const registerUser = async (req, res, next) => {
     } else {
       next(err);
     }
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -65,9 +73,7 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    const db = req.db;
-    const userCollection = db.collection("users");
-    const user = await userCollection.findOne({ email, password });
+    const user = await User.findOne({ email, password });
     if (!user) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
