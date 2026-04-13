@@ -75,15 +75,16 @@ export const createDirectory = async (req, res, next) => {
 export const updateDirectory = async (req, res, next) => {
   const user = req.user;
   const { id } = req.params;
-  if (!id)
+  if (!id) {
     return res.status(400).json({ message: "Directory ID is required!" });
+  }
   const { newDirName } = req.body;
 
   try {
     await Directory.findOneAndUpdate(
       { _id: String(id), userId: user._id },
       { $set: { name: newDirName } },
-    );
+    ).lean();
     res.status(200).json({ message: "Directory Renamed!" });
   } catch (err) {
     next(err);

@@ -1,4 +1,3 @@
-import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
@@ -19,9 +18,9 @@ export const registerUser = async (req, res, next) => {
 
   const session = await mongoose.startSession();
   try {
-    const rootDirId = new ObjectId();
-    const userId = new ObjectId();
-    const foundUser = await User.findOne({ email });
+    const rootDirId = new mongoose.Types.ObjectId();
+    const userId = new mongoose.Types.ObjectId();
+    const foundUser = await User.findOne({ email }).lean();
     if (foundUser) {
       return res.status(409).json({
         error: "User already exists",
@@ -31,9 +30,10 @@ export const registerUser = async (req, res, next) => {
     }
 
     // Start Transactions
+    session.startTransaction();
 
     await session.withTransaction(async () => {
-      await Directory.create(
+      await Directory.insertOne(
         {
           _id: rootDirId,
           name: `root-${email}`,
@@ -42,8 +42,7 @@ export const registerUser = async (req, res, next) => {
         },
         { session },
       );
-
-      await User.create(
+      await User.insertOne(
         {
           _id: userId,
           name,
@@ -73,7 +72,7 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email, password });
+    const user = await User.findOne({ email, password }).lean();
     if (!user) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
