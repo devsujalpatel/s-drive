@@ -119,22 +119,12 @@ export const deleteDirectory = async (req, res, next) => {
     }
 
     async function getDirectoryContents(id) {
-      let files = await File.find(
-        {
-          parentDirId: id,
-        },
-        { projection: { extension: 1 } },
-      )
-        .lean()
-        .exec();
-      let directories = await Directory.find(
-        {
-          parentDirId: id,
-        },
-        { projection: { _id: 1 } },
-      )
-        .lean()
-        .exec();
+      let files = await File.find({
+        parentDirId: id,
+      }).lean();
+      let directories = await Directory.find({
+        parentDirId: id,
+      }).lean();
 
       for (const { _id, name } of directories) {
         const { files: childFiles, directories: childDirectories } =
