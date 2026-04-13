@@ -5,7 +5,7 @@ export async function connectDB() {
   try {
     console.log("Trying to connect...");
     const connection = await mongoose.connect(process.env.MONGO_URI);
-    console.log("Connected to MongoDB");
+    console.log("Connected to MongoDB ✅");
     return connection;
   } catch (error) {
     console.error("MongoDB failed ❌:", error.message);
@@ -22,7 +22,6 @@ export const disconnectDB = async () => {
     console.error("Error closing MongoDB connection:", error);
   }
 };
-
 
 process.on("SIGINT", async () => {
   await mongoose.connection.close();

@@ -1,11 +1,11 @@
 {
   "name": "01_intro-to-express",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "db:push": "node config/setup.js",
-    "dev": "node --watch app.js"
+    "dev": "node --watch server.js"
   },
   "keywords": [],
   "author": "",

@@ -1,4 +1,3 @@
-import { client } from "../config/db.js";
 import { ObjectId } from "mongodb";
 
 // Register
