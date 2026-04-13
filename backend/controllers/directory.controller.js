@@ -1,6 +1,6 @@
 import { rm } from "fs/promises";
 import { ObjectId } from "mongodb";
-
+import Directory from "../models/directory.model.js";
 
 // Read
 export const getDirectory = async (req, res, next) => {
@@ -8,12 +8,11 @@ export const getDirectory = async (req, res, next) => {
     const db = req.db;
     const user = req.user;
     const _id = req.params.id ? new ObjectId(req.params.id) : user.rootDirId;
-    const dirCollection = db.collection("directories");
     const fileCollection = db.collection("files");
 
-    const directoryData = await dirCollection.findOne({
+    const directoryData = await Directory.findOne({
       _id,
-    });
+    }).lean();
 
     if (!directoryData) {
       return res.status(404).json({
@@ -21,9 +20,9 @@ export const getDirectory = async (req, res, next) => {
       });
     }
 
-    const directories = await dirCollection
-      .find({ parentDirId: _id })
-      .toArray();
+    const directories = await Directory.find({
+      parentDirId: directoryData._id,
+    }).lean();
 
     // const files = await fileCollection.find({ directoryId: id }).toArray();
     const files = await fileCollection
@@ -42,6 +41,7 @@ export const getDirectory = async (req, res, next) => {
   }
 };
 
+// Create
 export const createDirectory = async (req, res, next) => {
   const user = req.user;
   const parentDirId = req.params.id
@@ -80,6 +80,7 @@ export const createDirectory = async (req, res, next) => {
   }
 };
 
+// Update
 export const updateDirectory = async (req, res, next) => {
   const user = req.user;
   const db = req.db;
@@ -99,8 +100,9 @@ export const updateDirectory = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-}
+};
 
+// Delete
 export const deleteDirectory = async (req, res, next) => {
   const user = req.user;
   const { id } = req.params;
@@ -174,6 +176,4 @@ export const deleteDirectory = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-}
-
-export default router;
+};

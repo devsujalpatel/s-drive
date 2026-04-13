@@ -2,42 +2,27 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import directoryRoutes from "./routes/directory.routes.js";
+import "dotenv/config";
+
+export const app = express();
+app.use(cookieParser());
+app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
+
 import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import checkAuth from "./middlewares/auth.middleware.js";
-import "dotenv/config";
 
-import { connectDB } from "./config/db.js";
+app.use("/directory", checkAuth, directoryRoutes);
+app.use("/file", checkAuth, fileRoutes);
+app.use("/user", userRoutes);
 
-try {
-  const db = await connectDB();
-
-  const app = express();
-  app.use((req, res, next) => {
-    req.db = db; // Attach the database instance to the request object
-    next();
-  });
-  app.use(cookieParser());
-  app.use(express.json());
-  app.use(
-    cors({
-      origin: "http://localhost:5173",
-      credentials: true,
-    }),
-  );
-
-  app.use("/directory", checkAuth, directoryRoutes);
-  app.use("/file", checkAuth, fileRoutes);
-  app.use("/user", userRoutes);
-
-  app.use((err, req, res, next) => {
-    console.log(err);
-    res.status(err.status || 500).json({ message: "Something went wrong!!" });
-  });
-
-  app.listen(8000, () => {
-    console.log(`Server Started on Port 8000`);
-  });
-} catch (error) {
-  console.error("Failed to start server:", error);
-}
+app.use((err, req, res, next) => {
+  console.log(err);
+  res.status(err.status || 500).json({ message: "Something went wrong!!" });
+});

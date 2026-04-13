@@ -1,6 +1,7 @@
 import { client } from "../config/db.js";
 import { ObjectId } from "mongodb";
 
+// Register
 export const registerUser = async (req, res, next) => {
   const { name, email, password } = req.body;
   const db = req.db;
@@ -61,6 +62,7 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
+// Login
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
@@ -82,6 +84,7 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+// Get User
 export const getUser = (req, res) => {
   res.status(200).json({
     name: req.user.name,
@@ -89,6 +92,7 @@ export const getUser = (req, res) => {
   });
 };
 
+// Logout
 export const logoutUser = async (req, res, next) => {
   try {
     res.clearCookie("uid");
