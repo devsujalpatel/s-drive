@@ -7,7 +7,7 @@ import File from "../models/file.model.js";
 export const getDirectory = async (req, res, next) => {
   try {
     const user = req.user;
-    const _id = req.params.id ? new ObjectId(req.params.id) : user.rootDirId;
+    const _id = req.params.id ? req.params.id : user.rootDirId.toString();
 
     const directoryData = await Directory.findOne({
       _id,
@@ -26,9 +26,7 @@ export const getDirectory = async (req, res, next) => {
     // const files = await fileCollection.find({ directoryId: id }).toArray();
     const files = await File.find({
       parentDirId: directoryData._id,
-    })
-      .lean()
-      .exec();
+    }).lean();
 
     return res.status(200).json({
       ...directoryData,
@@ -43,9 +41,7 @@ export const getDirectory = async (req, res, next) => {
 // Create
 export const createDirectory = async (req, res, next) => {
   const user = req.user;
-  const parentDirId = req.params.id
-    ? new ObjectId(req.params.id)
-    : user.rootDirId;
+  const parentDirId = req.params.id ? req.params.id : user.rootDirId.toString();
   const dirname = req.headers.dirname || "New Folder";
 
   try {
