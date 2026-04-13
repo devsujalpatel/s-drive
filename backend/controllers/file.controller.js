@@ -1,7 +1,6 @@
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
-import { ObjectId } from "mongodb";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 
@@ -10,11 +9,11 @@ export const uploadFile = async (req, res, next) => {
   try {
     const user = req.user;
     const parentDirId = req.params.id
-      ? new ObjectId(req.params.id)
-      : user.rootDirId;
+      ? req.params.id
+      : user.rootDirId.toString();
 
     const parentDirData = await Directory.findOne({
-      _id: new ObjectId(String(parentDirId)),
+      _id: parentDirId,
       userId: req.user._id,
     });
 
@@ -58,8 +57,8 @@ export const getFile = async (req, res, next) => {
   const user = req.user;
   try {
     const fileData = await File.findOne({
-      _id: new ObjectId(String(id)),
-      userId: new ObjectId(String(user._id)),
+      _id: String(id),
+      userId: user._id,
     });
 
     // Check if file exists
@@ -91,8 +90,8 @@ export const updateFile = async (req, res, next) => {
 
   try {
     const fileData = await File.findOne({
-      _id: new ObjectId(String(id)),
-      userId: new ObjectId(String(user._id)),
+      _id: String(id),
+      userId: String(user._id),
     });
 
     if (!fileData) {
@@ -100,8 +99,8 @@ export const updateFile = async (req, res, next) => {
     }
     await File.updateOne(
       {
-        _id: new ObjectId(String(id)),
-        userId: new ObjectId(String(user._id)),
+        _id: String(id),
+        userId: String(user._id),
       },
       {
         $set: {
@@ -123,10 +122,9 @@ export const deleteFile = async (req, res, next) => {
   const user = req.user;
 
   try {
-
     const fileData = await File.findOne({
-      _id: new ObjectId(String(id)),
-      userId: new ObjectId(String(user._id)),
+      _id: String(id),
+      userId: String(user._id),
     });
 
     if (!fileData) {
@@ -135,8 +133,8 @@ export const deleteFile = async (req, res, next) => {
 
     await rm(`./storage/${id}${fileData.extension}`, { recursive: true });
     await File.deleteOne({
-      _id: new ObjectId(String(id)),
-      userId: new ObjectId(String(user._id)),
+      _id: String(id),
+      userId: String(user._id),
     });
 
     // Remove file from filesystem

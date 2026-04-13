@@ -1,5 +1,4 @@
 import { rm } from "fs/promises";
-import { ObjectId } from "mongodb";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 
@@ -82,7 +81,7 @@ export const updateDirectory = async (req, res, next) => {
 
   try {
     await Directory.findOneAndUpdate(
-      { _id: new ObjectId(id), userId: user._id },
+      { _id: String(id), userId: user._id },
       { $set: { name: newDirName } },
     );
     res.status(200).json({ message: "Directory Renamed!" });
@@ -97,10 +96,9 @@ export const deleteDirectory = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const dirObjectId = new ObjectId(String(id));
     const directory = await Directory.findOne(
       {
-        _id: dirObjectId,
+        _id: String(id),
         userId: user._id,
       },
       {
@@ -124,7 +122,7 @@ export const deleteDirectory = async (req, res, next) => {
 
       for (const { _id, name } of directories) {
         const { files: childFiles, directories: childDirectories } =
-          await getDirectoryContents(new ObjectId(String(_id)));
+          await getDirectoryContents(String(_id));
 
         files = [...files, ...childFiles];
         directories = [...directories, ...childDirectories];
@@ -133,7 +131,7 @@ export const deleteDirectory = async (req, res, next) => {
       return { files, directories };
     }
 
-    const { files, directories } = await getDirectoryContents(dirObjectId);
+    const { files, directories } = await getDirectoryContents(String(id));
 
     for (const { _id, extension } of files) {
       await rm(`./storage/${_id.toString()}${extension}`);
@@ -143,7 +141,7 @@ export const deleteDirectory = async (req, res, next) => {
       _id: { $in: files.map(({ _id }) => _id) },
     });
     await Directory.deleteMany({
-      _id: { $in: [...directories.map(({ _id }) => _id), dirObjectId] },
+      _id: { $in: [...directories.map(({ _id }) => _id), String(id)] },
     });
 
     res.status(200).json({ message: "Directory Deleted!" });

@@ -33,7 +33,7 @@ export const registerUser = async (req, res, next) => {
     // Start Transactions
 
     await session.withTransaction(async () => {
-      await Directory.insertOne(
+      await Directory.create(
         {
           _id: rootDirId,
           name: `root-${email}`,
@@ -43,7 +43,7 @@ export const registerUser = async (req, res, next) => {
         { session },
       );
 
-      await User.insertOne(
+      await User.create(
         {
           _id: userId,
           name,
