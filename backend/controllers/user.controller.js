@@ -20,14 +20,14 @@ export const registerUser = async (req, res, next) => {
   try {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
-    const foundUser = await User.findOne({ email }).lean();
-    if (foundUser) {
-      return res.status(409).json({
-        error: "User already exists",
-        message:
-          "A user with this email address already exists. Please try logging in or use a different email.",
-      });
-    }
+    // const foundUser = await User.findOne({ email }).lean();
+    // if (foundUser) {
+    //   return res.status(409).json({
+    //     error: "User already exists",
+    //     message:
+    //       "A user with this email address already exists. Please try logging in or use a different email.",
+    //   });
+    // }
 
     // Start Transactions
     session.startTransaction();
@@ -56,13 +56,19 @@ export const registerUser = async (req, res, next) => {
 
     res.status(201).json({ message: "User Registered" });
   } catch (err) {
+    if (err.code === 11000 && err.keyValue.email) {
+      return res.status(409).json({
+        error: "This email is already exists",
+        message:
+          "A user with this email address already exists. Please try logging in or use a different email.",
+      });
+    }
     if (err.code === 121) {
       return res.status(400).json({
         error: "Invalid Fields, please check your input and try again.",
       });
-    } else {
-      next(err);
     }
+    next(err);
   } finally {
     await session.endSession();
   }
