@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
+import crypto from "crypto";
+import { verifyPassword, hashPassword } from "../utils/hash-password.js";
 
 // Register
 export const registerUser = async (req, res, next) => {
@@ -20,14 +22,8 @@ export const registerUser = async (req, res, next) => {
   try {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
-    // const foundUser = await User.findOne({ email }).lean();
-    // if (foundUser) {
-    //   return res.status(409).json({
-    //     error: "User already exists",
-    //     message:
-    //       "A user with this email address already exists. Please try logging in or use a different email.",
-    //   });
-    // }
+
+    const hashedPassword = hashPassword(password);
 
     await session.withTransaction(async () => {
       await Directory.insertOne(
@@ -44,7 +40,7 @@ export const registerUser = async (req, res, next) => {
           _id: userId,
           name,
           email,
-          password,
+          password: hashedPassword,
           rootDirId,
         },
         { session },
@@ -75,8 +71,13 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email, password }).lean();
+    const user = await User.findOne({ email }).lean();
     if (!user) {
+      return res.status(401).json({ error: "Invalid Credentials" });
+    }
+
+    const isMatch = verifyPassword(password, user.password);
+    if (!isMatch) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
