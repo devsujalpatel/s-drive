@@ -4,10 +4,13 @@ export default async function checkAuth(req, res, next) {
   const { token } = req.signedCookies;
 
   if (!token) {
+    res.clearCookie("token");
     return res.status(401).json({ error: "Not logged!" });
   }
 
-  const { id: uid, expiry } = JSON.parse(token);
+  const { id: uid, expiry } = JSON.parse(
+    Buffer.from(token, "base64url").toString(),
+  );
 
   const currentTime = Math.round(Date.now() / 1000);
 

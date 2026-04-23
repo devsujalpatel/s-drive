@@ -87,7 +87,7 @@ export const loginUser = async (req, res, next) => {
       expiry: Math.round(Date.now() / 1000) + 100000, // 1 day expiry
     });
 
-    res.cookie("token", cookiePayload, {
+    res.cookie("token", Buffer.from(cookiePayload).toString("base64url"), {
       httpOnly: true,
       signed: true,
       maxAge: 60 * 1000 * 60 * 24,
@@ -109,7 +109,7 @@ export const getUser = (req, res) => {
 // Logout
 export const logoutUser = async (req, res, next) => {
   try {
-    res.clearCookie("uid");
+    res.clearCookie("token");
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "Logout Failed" });
