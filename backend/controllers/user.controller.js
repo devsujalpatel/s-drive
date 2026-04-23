@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
 import crypto from "crypto";
-import { verifyPassword, hashPassword } from "../utils/hash-password.js";
+import bcrypt from "bcrypt";
 
 // Register
 export const registerUser = async (req, res, next) => {
@@ -23,11 +23,7 @@ export const registerUser = async (req, res, next) => {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
 
-    const { salt, hashedPassword } = await hashPassword(password);
-
-    if (!salt || !hashedPassword) {
-      return res.status(500).json({ error: "Password hashing failed" });
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     await session.withTransaction(async () => {
       await Directory.insertOne(
@@ -45,7 +41,6 @@ export const registerUser = async (req, res, next) => {
           name,
           email,
           password: hashedPassword,
-          salt,
           rootDirId,
         },
         { session },
@@ -81,12 +76,8 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
-    const isMatch = await verifyPassword({
-      password,
-      hashedPassword: user.password,
-      salt: user.salt,
-    });
-    if (!isMatch) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 

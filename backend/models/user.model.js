@@ -21,7 +21,6 @@ const userSchema = new Schema(
       required: true,
       minlength: [6, "Password must be at least 6 characters long"],
     },
-    salt: { type: String, required: true },
     rootDirId: { type: Schema.Types.ObjectId, default: null, ref: "Directory" },
   },
   { strict: "throw" },
