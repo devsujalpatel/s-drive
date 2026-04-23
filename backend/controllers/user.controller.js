@@ -23,7 +23,11 @@ export const registerUser = async (req, res, next) => {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
 
-    const hashedPassword = hashPassword(password);
+    const { salt, hashedPassword } = await hashPassword(password);
+
+    if (!salt || !hashedPassword) {
+      return res.status(500).json({ error: "Password hashing failed" });
+    }
 
     await session.withTransaction(async () => {
       await Directory.insertOne(
@@ -41,6 +45,7 @@ export const registerUser = async (req, res, next) => {
           name,
           email,
           password: hashedPassword,
+          salt,
           rootDirId,
         },
         { session },
@@ -76,7 +81,11 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
-    const isMatch = verifyPassword(password, user.password);
+    const isMatch = await verifyPassword({
+      password,
+      hashedPassword: user.password,
+      salt: user.salt,
+    });
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
