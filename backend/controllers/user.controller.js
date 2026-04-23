@@ -29,9 +29,6 @@ export const registerUser = async (req, res, next) => {
     //   });
     // }
 
-    // Start Transactions
-    session.startTransaction();
-
     await session.withTransaction(async () => {
       await Directory.insertOne(
         {
@@ -84,9 +81,16 @@ export const loginUser = async (req, res, next) => {
     }
 
     const userOid = user._id.toString();
-    res.cookie("uid", userOid, {
+
+    const cookiePayload = JSON.stringify({
+      id: userOid,
+      expiry: Math.round(Date.now() / 1000) + 100000, // 1 day expiry
+    });
+
+    res.cookie("token", cookiePayload, {
       httpOnly: true,
-      maxAge: 60 * 1000 * 60 * 24 * 7,
+      signed: true,
+      maxAge: 60 * 1000 * 60 * 24,
     });
     res.json({ message: "user logged in successfully" });
   } catch (error) {

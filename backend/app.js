@@ -5,7 +5,7 @@ import directoryRoutes from "./routes/directory.routes.js";
 import "dotenv/config";
 
 export const app = express();
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
 app.use(
   cors({
