@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
-import crypto from "crypto";
 import bcrypt from "bcrypt";
 
 // Register
@@ -23,7 +22,7 @@ export const registerUser = async (req, res, next) => {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     await session.withTransaction(async () => {
       await Directory.insertOne(
@@ -93,7 +92,7 @@ export const loginUser = async (req, res, next) => {
       signed: true,
       maxAge: 60 * 1000 * 60 * 24,
     });
-    res.json({ message: "user logged in successfully" });
+    res.status(200).json({ message: "user logged in successfully" });
   } catch (error) {
     next(error);
   }
