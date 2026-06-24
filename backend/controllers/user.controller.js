@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
-import bcrypt from "bcrypt";
 import Session from "../models/session.model.js";
 
 // Register
@@ -23,8 +22,6 @@ export const registerUser = async (req, res, next) => {
     const rootDirId = new mongoose.Types.ObjectId();
     const userId = new mongoose.Types.ObjectId();
 
-    const hashedPassword = await bcrypt.hash(password, 12);
-
     await session.withTransaction(async () => {
       await Directory.insertOne(
         {
@@ -40,7 +37,7 @@ export const registerUser = async (req, res, next) => {
           _id: userId,
           name,
           email,
-          password: hashedPassword,
+          password,
           rootDirId,
         },
         { session },
@@ -76,7 +73,7 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
@@ -105,7 +102,8 @@ export const getUser = (req, res) => {
 // Logout
 export const logoutUser = async (req, res, next) => {
   try {
-    res.clearCookie("token");
+    res.clearCookie("sid");
+    await Session.deleteOne({ _id: req.session._id });
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "Logout Failed" });
