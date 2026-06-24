@@ -115,3 +115,12 @@ export const logoutUser = async (req, res, next) => {
     next(error);
   }
 };
+
+export const logoutAllSessions = async (req, res, next) => {
+  try {
+    await Session.deleteMany({ userId: req.user._id });
+    res.status(204).end();
+  } catch (error) {
+    next(error);
+  }
+};
