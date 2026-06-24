@@ -1,20 +1,9 @@
 import { model, Schema } from "mongoose";
 
-const sessionSchema = new Schema(
-  {
-    userId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-      expires: 60 * 60 * 24 * 7,
-    }
-  },
-  { strict: "throw" },
-);
+const sessionSchema = Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now, expires: '7d' } // Auto-cleanup after 7 days
+});
 
 const Session = model("Session", sessionSchema);
 export default Session;

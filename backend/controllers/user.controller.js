@@ -64,24 +64,29 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
+const MAX_DEVICES = 2;
+
 // Login
 export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email }).lean();
-    if (!user) {
+    const user = await User.findOne({ email });
+    if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
-    const isPasswordValid = await user.comparePassword(password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid Credentials" });
+    const allSessions = await Session.find({ userId: user._id }).sort({ createdAt: 1 });
+    if (allSessions.length >= MAX_DEVICES) {
+      await allSessions[0].deleteOne();
     }
 
-    const session = await Session.create({ userId: user._id });
+    const session = await Session.create({
+      userId: user._id,
+    });
 
     res.cookie("sid", session._id, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
       signed: true,
       maxAge: 60 * 1000 * 60 * 24 * 7,
     });
@@ -103,7 +108,7 @@ export const getUser = (req, res) => {
 export const logoutUser = async (req, res, next) => {
   try {
     res.clearCookie("sid");
-    await Session.deleteOne({ _id: req.session._id });
+    await Session.findByIdAndDelete({ _id: req.session._id });
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "Logout Failed" });
