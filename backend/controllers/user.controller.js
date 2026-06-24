@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
 import bcrypt from "bcrypt";
+import Session from "../models/session.model.js";
 
 // Register
 export const registerUser = async (req, res, next) => {
@@ -80,17 +81,12 @@ export const loginUser = async (req, res, next) => {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
 
-    const userOid = user._id.toString();
+    const session = await Session.create({ userId: user._id });
 
-    const cookiePayload = JSON.stringify({
-      id: userOid,
-      expiry: Math.round(Date.now() / 1000) + 100000, // 1 day expiry
-    });
-
-    res.cookie("token", Buffer.from(cookiePayload).toString("base64url"), {
+    res.cookie("sid", session._id, {
       httpOnly: true,
       signed: true,
-      maxAge: 60 * 1000 * 60 * 24,
+      maxAge: 60 * 1000 * 60 * 24 * 7,
     });
     res.status(200).json({ message: "user logged in successfully" });
   } catch (error) {
