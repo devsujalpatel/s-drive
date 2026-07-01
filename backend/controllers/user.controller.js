@@ -119,6 +119,7 @@ export const logoutUser = async (req, res, next) => {
 export const logoutAllSessions = async (req, res, next) => {
   try {
     await Session.deleteMany({ userId: req.user._id });
+    res.clearCookie("sid");
     res.status(204).end();
   } catch (error) {
     next(error);
