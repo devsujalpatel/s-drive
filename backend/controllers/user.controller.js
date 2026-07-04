@@ -2,10 +2,12 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import Directory from "../models/directory.model.js";
 import Session from "../models/session.model.js";
+import OTP from "../models/otpModel.js";
+import { sendOtpService } from "../services/sendOtpService.js";
 
 // Register
 export const registerUser = async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, otp } = req.body;
 
   if (!name || !email || !password) {
     return res.status(400).json({ error: "All fields are required" });
@@ -16,6 +18,12 @@ export const registerUser = async (req, res, next) => {
       .status(400)
       .json({ error: "Password must be at least 6 characters long" });
   }
+
+  const otpRecord = await OTP.findOne({ email, otp });
+  if (!otpRecord) {
+    res.status(400).json({ error: "Invalid or Expired OTP" });
+  }
+  await otpRecord.deleteOne();
 
   const session = await mongoose.startSession();
   try {
@@ -74,8 +82,32 @@ export const loginUser = async (req, res, next) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }
+    const { success } = await sendOtpService(email);
+    if (!success) {
+      return res.status(500).json({ error: "Failed to send OTP" });
+    }
+    res.status(200).json({ message: "OTP sent successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const allSessions = await Session.find({ userId: user._id }).sort({ createdAt: 1 });
+export const createSession = async (req, res, next) => {
+  const { email, otp } = req.body;
+  try {
+    const otpRecord = await OTP.findOne({ email, otp });
+    if (!otpRecord) {
+      return res.status(500).json({ error: "Invalid or expired OTP" });
+    }
+
+    const user = await User.findOne({ email: otpRecord.email });
+    if (!user) {
+      return res.status(500).json({ error: "User not found" });
+    }
+
+    const allSessions = await Session.find({ userId: user._id }).sort({
+      createdAt: 1,
+    });
     if (allSessions.length >= MAX_DEVICES) {
       await allSessions[0].deleteOne();
     }

@@ -3,6 +3,7 @@ import checkAuth from "../middlewares/auth.middleware.js";
 import {
   getUser,
   loginUser,
+  createSession,
   logoutUser,
   logoutAllSessions,
   registerUser,
@@ -13,6 +14,8 @@ const router = express.Router();
 router.post("/register", registerUser);
 
 router.post("/login", loginUser);
+
+router.post("/create-session", createSession);
 
 router.get("/", checkAuth, getUser);
 
