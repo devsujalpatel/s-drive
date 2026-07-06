@@ -1,29 +1,29 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
+import useAuthStore from "./store/useAuthStore";
+import { LoginWithGoogle } from "./components/LoginWithGoogle";
 
-const Register = () => {
-  const BASE_URL = "http://localhost:8000";
+const Login = () => {
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
+    email: "sujal7455@gmail.com",
+    password: "12345678",
   });
 
   // serverError will hold the error message from the server
   const [serverError, setServerError] = useState("");
 
-  const [isSuccess, setIsSuccess] = useState(false);
+  const setEmail = useAuthStore((state) => state.setEmail);
 
   const navigate = useNavigate();
 
-  // Handler for input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Clear the server error as soon as the user starts typing in Email
-    if (name === "email" && serverError) {
+    
+    // Clear the server error as soon as the user starts typing in either field
+    if (serverError) {
       setServerError("");
     }
 
@@ -33,69 +33,48 @@ const Register = () => {
     }));
   };
 
-  // Handler for form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSuccess(false); // reset success if any
+    setEmail(formData.email);
 
     try {
-      const response = await fetch(`${BASE_URL}/user/register`, {
+      const response = await fetch(`${BASE_URL}/user/login`, {
         method: "POST",
         body: JSON.stringify(formData),
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // to include cookies in the request
+        credentials: "include",
       });
 
       const data = await response.json();
-
       if (data.error) {
-        // Show error below the email field (e.g., "Email already exists")
+        // If there's an error, set the serverError message
         setServerError(data.error);
       } else {
-        // Registration success
-        setIsSuccess(true);
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
+        // On success, navigate to home or any other protected route
+        navigate("/verify-otp");
       }
     } catch (error) {
-      // In case fetch fails
       console.error("Error:", error);
       setServerError("Something went wrong. Please try again.");
     }
   };
 
+  // If there's an error, we'll add "input-error" class to both fields
+  const hasError = Boolean(serverError);
+
   return (
     <div className="container">
-      <h2 className="heading">Register</h2>
+      <h2 className="heading">Login</h2>
       <form className="form" onSubmit={handleSubmit}>
-        {/* Name */}
-        <div className="form-group">
-          <label htmlFor="name" className="label">
-            Name
-          </label>
-          <input
-            className="input"
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter your name"
-            required
-          />
-        </div>
-
         {/* Email */}
         <div className="form-group">
           <label htmlFor="email" className="label">
             Email
           </label>
           <input
-            // If there's a serverError, add an extra class to highlight border
-            className={`input ${serverError ? "input-error" : ""}`}
+            className={`input ${hasError ? "input-error" : ""}`}
             type="email"
             id="email"
             name="email"
@@ -104,8 +83,6 @@ const Register = () => {
             placeholder="Enter your email"
             required
           />
-          {/* Absolutely-positioned error message below email field */}
-          {serverError && <span className="error-msg">{serverError}</span>}
         </div>
 
         {/* Password */}
@@ -114,7 +91,7 @@ const Register = () => {
             Password
           </label>
           <input
-            className="input"
+            className={`input ${hasError ? "input-error" : ""}`}
             type="password"
             id="password"
             name="password"
@@ -123,22 +100,24 @@ const Register = () => {
             placeholder="Enter your password"
             required
           />
+          {/* Absolutely-positioned error message below password field */}
+          {serverError && <span className="error-msg">{serverError}</span>}
         </div>
 
-        <button
-          type="submit"
-          className={`submit-button ${isSuccess ? "success" : ""}`}
-        >
-          {isSuccess ? "Registration Successful" : "Register"}
+        <button type="submit" className="submit-button">
+          Login
         </button>
       </form>
 
-      {/* Link to the login page */}
+      {/* Link to the register page */}
       <p className="link-text">
-        Already have an account? <Link to="/login">Login</Link>
+        Don't have an account? <Link to="/register">Register</Link>
       </p>
+
+      <LoginWithGoogle />
+
     </div>
   );
 };
 
-export default Register;
+export default Login;

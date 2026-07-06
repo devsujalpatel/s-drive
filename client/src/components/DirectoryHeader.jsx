@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FaFolderPlus,
   FaUpload,
@@ -16,8 +16,8 @@ function DirectoryHeader({
   handleFileSelect,
   disabled = false,
 }) {
-  // Use a constant for the API base URL
-  const BASE_URL = "http://localhost:8000";
+  
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
@@ -131,9 +131,7 @@ function DirectoryHeader({
 
   return (
     <header className="directory-header">
-      <Link to="/" className="directory-name-link">
-        <h1 className="directory-name">{directoryName}</h1>
-      </Link>
+      <h1>{directoryName}</h1>
       <div className="header-links">
         {/* Create Folder (icon button) */}
         <button
@@ -171,7 +169,6 @@ function DirectoryHeader({
             className="icon-button"
             title="User Menu"
             onClick={handleUserIconClick}
-            disabled={disabled}
           >
             <FaUser />
           </button>

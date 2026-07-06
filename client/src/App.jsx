@@ -3,6 +3,8 @@ import DirectoryView from "./DirectoryView";
 import Register from "./Register";
 import "./App.css";
 import Login from "./Login";
+import VerifyOtp from "./VerifyOtp";
+import { GoogleCode } from "./GoogleCode";
 
 const router = createBrowserRouter([
   {
@@ -21,6 +23,14 @@ const router = createBrowserRouter([
     path: "/directory/:dirId",
     element: <DirectoryView />,
   },
+  {
+    path: "/verify-otp",
+    element: <VerifyOtp />,
+  },
+  {
+    path: "/code",
+    element: <GoogleCode />,
+  }
 ]);
 
 function App() {

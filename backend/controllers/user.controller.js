@@ -92,6 +92,7 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
+// Create Session
 export const createSession = async (req, res, next) => {
   const { email, otp } = req.body;
   try {
@@ -140,7 +141,7 @@ export const getUser = (req, res) => {
 export const logoutUser = async (req, res, next) => {
   try {
     res.clearCookie("sid");
-    await Session.findByIdAndDelete({ _id: req.session._id });
+    await Session.findByIdAndDelete({ _id: req.session.id });
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "Logout Failed" });

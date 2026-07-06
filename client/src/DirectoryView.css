@@ -18,12 +18,7 @@
   background: white;
 }
 
-.directory-name-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.directory-name {
+.directory-header h1 {
   margin: 0;
   margin-right: 20px;
   font-size: 2rem;
