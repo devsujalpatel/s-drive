@@ -133,7 +133,7 @@ export async function sendOtpService(email) {
   `;
 
   await resend.emails.send({
-    from: "Storage App <otp@sujalpatel.tech>",
+    from: "Storage App <otp@ringui.tech>",
     to: email,
     subject: "Storage App OTP",
     html,

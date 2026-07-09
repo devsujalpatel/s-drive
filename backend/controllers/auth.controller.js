@@ -25,7 +25,6 @@ export const verifyOtp = async (req, res, next) => {
  }
 
 
-
 export const googleAuthCallback = async (req, res, next) => {
   const { code } = req.query;
 
