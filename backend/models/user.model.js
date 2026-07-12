@@ -19,10 +19,10 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
       minlength: [6, "Password must be at least 6 characters long"],
     },
     rootDirId: { type: Schema.Types.ObjectId, default: null, ref: "Directory" },
+    picture: { type: String, default: 'https://placehold.net/avatar.png' },
   },
   { strict: "throw" },
 );

@@ -4,6 +4,7 @@ import Directory from "../models/directory.model.js";
 import Session from "../models/session.model.js";
 import OTP from "../models/otpModel.js";
 import { sendOtpService } from "../services/sendOtpService.js";
+import { createUserSessionService } from "../services/createSessionService.js";
 
 // Register
 export const registerUser = async (req, res, next) => {
@@ -106,17 +107,8 @@ export const createSession = async (req, res, next) => {
       return res.status(500).json({ error: "User not found" });
     }
 
-    const allSessions = await Session.find({ userId: user._id }).sort({
-      createdAt: 1,
-    });
-    if (allSessions.length >= MAX_DEVICES) {
-      await allSessions[0].deleteOne();
-    }
-
-    const session = await Session.create({
-      userId: user._id,
-    });
-
+    const session = await createUserSessionService(user._id);
+    
     res.cookie("sid", session._id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -134,14 +126,15 @@ export const getUser = (req, res) => {
   res.status(200).json({
     name: req.user.name,
     email: req.user.email,
+    profile: req.user.picture,
   });
 };
 
 // Logout
 export const logoutUser = async (req, res, next) => {
   try {
-    res.clearCookie("sid");
     await Session.findByIdAndDelete({ _id: req.session.id });
+    res.clearCookie("sid");
     res.status(204).end();
   } catch (error) {
     res.status(500).json({ error: "Logout Failed" });

@@ -20,5 +20,6 @@ export default async function checkAuth(req, res, next) {
     return res.status(401).json({ error: "User not found" });
   }
   req.user = user;
+  req.session = session;
   next();
 }
