@@ -39,11 +39,13 @@ export const loginWithGoogle = async (req, res, next) => {
     }
 
     const { name, email, picture } = userData;
-    const user = await User.findOne({ email })
-      .select("email name picture rootDirId _id")
-      .lean();
+    const user = await User.findOne({ email });
     if (user) {
       const userSession = await createUserSessionService(user._id);
+      if(user.picture.includes("https://placehold.net/avatar.png")) {
+        user.picture = picture;
+        await user.save();
+      }
       res.cookie("sid", userSession._id, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
