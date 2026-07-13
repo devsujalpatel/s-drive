@@ -7,6 +7,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       minlength: [3, "Name must be at least 3 characters long"],
+      maxlength: [64, "Name must not exceed 64 characters"],
     },
     email: {
       type: String,
@@ -20,12 +21,18 @@ const userSchema = new Schema(
     password: {
       type: String,
       minlength: [6, "Password must be at least 6 characters long"],
+      maxlength: [64, "Password must not exceed 64 characters"],
     },
     rootDirId: { type: Schema.Types.ObjectId, default: null, ref: "Directory" },
     picture: { type: String, default: 'https://placehold.net/avatar.png' },
     googleRefreshToken: {
         type: String,
     },
+    role: {
+      type: String,
+      enum: ["user", "admin", "manager"],
+      default: "user"
+    }
   },
   { strict: "throw" },
 );

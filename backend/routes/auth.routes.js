@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyOtp, sendOtp, loginWithGoogle, connectGoogleDrive, googleDriveCallback } from "../controllers/auth.controller.js";
-import checkAuth from "../middlewares/auth.middleware.js";
+import {checkAuth} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 

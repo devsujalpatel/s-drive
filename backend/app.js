@@ -14,11 +14,14 @@ app.use(
   }),
 );
 
+// routes
 import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js"
-import checkAuth from "./middlewares/auth.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
+
+// middlewares
+import { checkAuth } from "./middlewares/auth.middleware.js";
 
 app.use("/directory", checkAuth, directoryRoutes);
 app.use("/file", checkAuth, fileRoutes);

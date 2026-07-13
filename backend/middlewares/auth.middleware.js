@@ -1,7 +1,7 @@
 import Session from "../models/session.model.js";
 import User from "../models/user.model.js";
 
-export default async function checkAuth(req, res, next) {
+export async function checkAuth(req, res, next) {
   const { sid } = req.signedCookies;
 
   if (!sid) {
@@ -21,5 +21,22 @@ export default async function checkAuth(req, res, next) {
   }
   req.user = user;
   req.session = session;
+  next();
+}
+
+
+export async function checkAdmin(req, res, next) {
+  const { user } = req;
+  if (user.role !== "admin") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+}
+
+export async function checkManager(req, res, next) {
+  const { user } = req;
+  if (user.role !== "manager") {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
   next();
 }
