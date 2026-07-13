@@ -6,6 +6,7 @@ import {
   FaUser,
   FaSignOutAlt,
   FaSignInAlt,
+  FaGoogleDrive,
 } from "react-icons/fa";
 
 function DirectoryHeader({
@@ -16,13 +17,13 @@ function DirectoryHeader({
   handleFileSelect,
   disabled = false,
 }) {
-  
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("Guest User");
   const [userEmail, setUserEmail] = useState("guest@example.com");
+  const [profile, setProfile] = useState(null);
 
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -41,11 +42,13 @@ function DirectoryHeader({
           // Set user info if logged in
           setUserName(data.name);
           setUserEmail(data.email);
+          setProfile(data.profile);
           setLoggedIn(true);
         } else if (response.status === 401) {
           // User not logged in
           setUserName("Guest User");
           setUserEmail("guest@example.com");
+          setProfile(null);
           setLoggedIn(false);
         } else {
           // Handle other error statuses if needed
@@ -80,6 +83,7 @@ function DirectoryHeader({
         setLoggedIn(false);
         setUserName("Guest User");
         setUserEmail("guest@example.com");
+        setProfile(null);
         navigate("/login");
       } else {
         console.error("Logout failed");
@@ -103,6 +107,7 @@ function DirectoryHeader({
         setLoggedIn(false);
         setUserName("Guest User");
         setUserEmail("guest@example.com");
+        setProfile(null);
         navigate("/login");
       } else {
         console.error("Logout failed");
@@ -129,6 +134,28 @@ function DirectoryHeader({
     };
   }, []);
 
+  // const [driveConnected, setDriveConnected] = useState(false);
+  
+  // useEffect(() => {
+  //   async function getDriveStatus() {
+  //     const res = await fetch(`${BASE_URL}/auth/google-drive/status`, {
+  //       credentials: "include",
+  //     });
+  
+  //     if (res.ok) {
+  //       const data = await res.json();
+  //       setDriveConnected(data.connected);
+  //     }
+  //   }
+  
+  //   getDriveStatus();
+  // }, []);
+  
+
+  // const connectGoogleDrive = () => {
+  //   window.location.href = `${BASE_URL}/auth/google-drive/connect`;
+  // }
+
   return (
     <header className="directory-header">
       <h1>{directoryName}</h1>
@@ -142,6 +169,16 @@ function DirectoryHeader({
         >
           <FaFolderPlus />
         </button>
+
+        {/* <button
+          className="icon-button"
+          title={driveConnected ? "Google Drive Connected" : "Connect Google Drive"}
+          onClick={connectGoogleDrive}
+        >
+          <FaGoogleDrive
+            color={driveConnected ? "#34A853" : undefined}
+          />
+        </button>*/}
 
         {/* Upload Files (icon button) */}
         <button
@@ -170,7 +207,11 @@ function DirectoryHeader({
             title="User Menu"
             onClick={handleUserIconClick}
           >
-            <FaUser />
+            {profile ? (
+              <img src={profile} alt="User" className="user-icon" />
+            ) : (
+              <FaUser />
+            )}
           </button>
 
           {showUserMenu && (
@@ -179,8 +220,13 @@ function DirectoryHeader({
                 <>
                   {/* Display name & email if logged in */}
                   <div className="user-menu-item user-info">
-                    <span className="user-name">{userName}</span>
-                    <span className="user-email">{userEmail}</span>
+                    {profile && (
+                      <img src={profile} alt="User" className="user-icon" />
+                    )}
+                    <div className="user-info-text">
+                      <span className="user-name">{userName}</span>
+                      <span className="user-email">{userEmail}</span>
+                    </div>
                   </div>
                   <div className="user-menu-divider" />
                   <div

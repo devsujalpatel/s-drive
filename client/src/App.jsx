@@ -4,7 +4,7 @@ import Register from "./Register";
 import "./App.css";
 import Login from "./Login";
 import VerifyOtp from "./VerifyOtp";
-import { GoogleCode } from "./GoogleCode";
+import Settings from "./Settings";
 
 const router = createBrowserRouter([
   {
@@ -28,8 +28,8 @@ const router = createBrowserRouter([
     element: <VerifyOtp />,
   },
   {
-    path: "/code",
-    element: <GoogleCode />,
+    path: "/settings",
+    element: <Settings />,
   }
 ]);
 

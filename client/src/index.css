@@ -1,0 +1,8 @@
+.user-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #1a1a1a22;
+  padding: 2px;
+}

@@ -280,9 +280,17 @@
 
 /* Name/Email container (non-clickable if you like) */
 .user-info {
-  flex-direction: column; /* stack name & email vertically */
   cursor: auto; /* make it not look clickable */
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 
 .user-name {
   font-weight: 600;
