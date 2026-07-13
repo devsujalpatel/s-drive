@@ -1,23 +1,42 @@
-import { useState } from 'react';
-import './UsersPage.css';
+import { useState } from "react";
+import "./UsersPage.css";
+import { useEffect } from "react";
 
-const dummyUsers = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', isLoggedIn: true },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', isLoggedIn: true },
-  { id: 3, name: 'Mark Taylor', email: 'mark@example.com', isLoggedIn: false },
-];
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(dummyUsers);
+  const [users, setUsers] = useState([]);
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const logoutUser = (userId) => {
     alert(`Logging out user with ID: ${userId}`);
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
-        user.id === userId ? { ...user, isLoggedIn: false } : user
-      )
+        user.id === userId ? { ...user, isLoggedIn: false } : user,
+      ),
     );
   };
+
+  useEffect(() => {
+    async function fetchAllUsers() {
+      try {
+        const response = await fetch(`${BASE_URL}/admin/users`, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+        } else {
+          console.error("Error fetching users:", response.statusText)
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchAllUsers();
+  }, []);
 
   return (
     <div className="users-container">
@@ -36,7 +55,7 @@ export default function UsersPage() {
             <tr key={user.id}>
               <td>{user.name}</td>
               <td>{user.email}</td>
-              <td>{user.isLoggedIn ? 'Logged In' : 'Logged Out'}</td>
+              <td>{user.isLoggedIn ? "Logged In" : "Logged Out"}</td>
               <td>
                 <button
                   className="logout-button"
