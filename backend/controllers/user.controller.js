@@ -124,6 +124,7 @@ export const createSession = async (req, res, next) => {
 // Get User
 export const getUser = (req, res) => {
   res.status(200).json({
+    id: req.user._id,
     name: req.user.name,
     email: req.user.email,
     profile: req.user.picture,
