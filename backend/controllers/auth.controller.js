@@ -5,6 +5,7 @@ import { verifyIdToken } from "../services/googleAuthService.js";
 import { sendOtpService } from "../services/sendOtpService.js";
 import mongoose from "mongoose";
 import { createUserSessionService } from "../services/createSessionService.js";
+import { oauth2Client } from "../lib/google.js";
 
 export const sendOtp = async (req, res, next) => {
   try {
@@ -42,7 +43,7 @@ export const loginWithGoogle = async (req, res, next) => {
     const user = await User.findOne({ email });
     if (user) {
       const userSession = await createUserSessionService(user._id);
-      if(user.picture.includes("https://placehold.net/avatar.png")) {
+      if (user.picture.includes("https://placehold.net/avatar.png")) {
         user.picture = picture;
         await user.save();
       }
@@ -87,5 +88,39 @@ export const loginWithGoogle = async (req, res, next) => {
     next(err);
   } finally {
     await session.endSession();
+  }
+};
+
+export const connectGoogleDrive = async (req, res, next) => {
+  try {
+    const url = oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      prompt: "consent",
+      scope: ["https://www.googleapis.com/auth/drive.readonly"],
+      state: "drive",
+    });
+    res.redirect(url);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const googleDriveCallback = async (req, res, next) => {
+  try {
+    if (req.query.state !== "drive") {
+      return res.redirect(process.env.CLIENT_URL);
+    }
+
+    const { tokens } = await oauth2Client.getToken(req.query.code);
+
+    await User.findByIdAndUpdate(req.user._id, {
+      googleRefreshToken: tokens.refresh_token,
+    });
+
+    return res.redirect(
+      `${process.env.CLIENT_URL}/settings?drive=connected`
+    );
+  } catch (err) {
+    next(err);
   }
 };

@@ -23,6 +23,9 @@ const userSchema = new Schema(
     },
     rootDirId: { type: Schema.Types.ObjectId, default: null, ref: "Directory" },
     picture: { type: String, default: 'https://placehold.net/avatar.png' },
+    googleRefreshToken: {
+        type: String,
+    },
   },
   { strict: "throw" },
 );
