@@ -1,3 +1,5 @@
+import Directory from "../models/directory.model.js";
+import File from "../models/file.model.js";
 import Session from "../models/session.model.js";
 import User from "../models/user.model.js";
 
@@ -19,6 +21,17 @@ export const logoutUser = async (req, res, next) => {
     const { userId } = req.body;
     await Session.deleteMany({ userId: userId });
     return res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export const deleteUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    await User.findByIdAndDelete(userId);
+    await Session.deleteMany({ userId })
+    return res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     next(error);
   }

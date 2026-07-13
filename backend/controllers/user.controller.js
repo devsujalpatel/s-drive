@@ -127,6 +127,7 @@ export const getUser = (req, res) => {
     name: req.user.name,
     email: req.user.email,
     profile: req.user.picture,
+    role: req.user.role,
   });
 };
 

@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userRole, setUserRole] = useState("");
+  const [userName, setUserName] = useState("");
   const BASE_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
@@ -22,17 +24,35 @@ export default function UsersPage() {
       });
       if (response.ok) {
         setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user.id === userId ? { ...user, isLoggedIn: false } : user,
-      ),
-    );
+          prevUsers.map((user) =>
+            user.id === userId ? { ...user, isLoggedIn: false } : user,
+          ),
+        );
       } else {
         console.error("Error logging out:", response.statusText);
       }
     } catch (error) {
       console.error(error);
     }
-
+  };
+  const deleteUser = async (userId) => {
+    alert(`Deleting user with ID: ${userId}`);
+    try {
+      const response = await fetch(`${BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      if (response.ok) {
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      } else {
+        console.error("Error Deleting user:", response.statusText);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -63,6 +83,32 @@ export default function UsersPage() {
       }
     }
     fetchAllUsers();
+    async function fetchUser() {
+      try {
+        const response = await fetch(`${BASE_URL}/user`, {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Set user info if logged in
+          setUserRole(data.role);
+          setUserName(data.name);
+          setLoggedIn(true);
+        } else if (response.status === 401) {
+          // User not logged in
+          navigate("/login");
+          setLoggedIn(false);
+          setUserRole("");
+          setUserName("");
+        } else {
+          // Handle other error statuses if needed
+          console.error("Error fetching user info:", response.status);
+        }
+      } catch (err) {
+        console.error("Error fetching user info:", err);
+      }
+    }
+    fetchUser();
   }, []);
 
   return (
@@ -71,7 +117,8 @@ export default function UsersPage() {
         <div>Loading...</div>
       ) : (
         <div className="users-container">
-          <h1 className="title">All Users</h1>
+            <h1 className="title">All Users</h1>
+            <p>{userName}: {userRole}</p>
           <table className="user-table">
             <thead>
               <tr>
@@ -79,6 +126,7 @@ export default function UsersPage() {
                 <th>Email</th>
                 <th>Status</th>
                 <th></th>
+                {userRole === "admin" && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -96,6 +144,16 @@ export default function UsersPage() {
                       Logout
                     </button>
                   </td>
+                  {userRole === "admin" && (
+                    <td>
+                      <button
+                        className="delete-button"
+                        onClick={() => deleteUser(user.id)}
+                      >
+                        Delete User
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
