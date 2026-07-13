@@ -5,6 +5,8 @@ import "./App.css";
 import Login from "./Login";
 import VerifyOtp from "./VerifyOtp";
 import Settings from "./Settings";
+import UsersPage from "./UsersPage";
+
 
 const router = createBrowserRouter([
   {
@@ -30,6 +32,10 @@ const router = createBrowserRouter([
   {
     path: "/settings",
     element: <Settings />,
+  },
+  {
+    path: "/users",
+    element: <UsersPage />
   }
 ]);
 

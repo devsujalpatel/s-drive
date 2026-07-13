@@ -18,11 +18,13 @@ import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js"
 import checkAuth from "./middlewares/auth.middleware.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 app.use("/directory", checkAuth, directoryRoutes);
 app.use("/file", checkAuth, fileRoutes);
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
+app.use("/admin", adminRoutes)
 
 app.use((err, req, res, next) => {
   console.log(err);
