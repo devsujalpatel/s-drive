@@ -21,10 +21,10 @@ import authRoutes from "./routes/auth.routes.js"
 import adminRoutes from "./routes/admin.routes.js";
 
 // middlewares
-import { checkAuth } from "./middlewares/auth.middleware.js";
+import { checkAuth, checkDeleted } from "./middlewares/auth.middleware.js";
 
-app.use("/directory", checkAuth, directoryRoutes);
-app.use("/file", checkAuth, fileRoutes);
+app.use("/directory", checkAuth, checkDeleted, directoryRoutes);
+app.use("/file", checkAuth, checkDeleted, fileRoutes);
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
 app.use("/admin", adminRoutes)

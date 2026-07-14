@@ -8,6 +8,9 @@ import File from "../models/file.model.js";
 export const uploadFile = async (req, res, next) => {
   try {
     const user = req.user;
+      if(user.deleted) {
+      return res.status(401).json({ error: "Your account has been deleted. Please contact support if you need assistance." });
+    }
     const parentDirId = req.params.id
       ? req.params.id
       : user.rootDirId.toString();

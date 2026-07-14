@@ -40,3 +40,11 @@ export async function checkManager(req, res, next) {
   }
   next();
 }
+
+export async function checkDeleted(req, res, next) {
+  const { user } = req;
+  if (user.deleted) {
+    return res.status(401).json({ error: "Your account has been deleted. Please contact support if you need assistance." });
+  }
+  next();
+}

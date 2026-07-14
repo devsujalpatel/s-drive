@@ -1,5 +1,5 @@
 import express from "express";
-import { checkAuth } from "../middlewares/auth.middleware.js";
+import { checkAuth, checkDeleted } from "../middlewares/auth.middleware.js";
 import {
   getUser,
   loginUser,
@@ -17,11 +17,11 @@ router.post("/login", loginUser);
 
 router.post("/create-session", createSession);
 
-router.get("/", checkAuth, getUser);
+router.get("/", checkAuth, checkDeleted, getUser);
 
-router.post("/logout", checkAuth, logoutUser);
+router.post("/logout", checkAuth, checkDeleted, logoutUser);
 
-router.post("/logout-all", checkAuth, logoutAllSessions);
+router.post("/logout-all", checkAuth, checkDeleted, logoutAllSessions);
 
 
 export default router;

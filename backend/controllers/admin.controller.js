@@ -66,7 +66,7 @@ export const deleteUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    if (userId === req.user.id) {
+    if (userId === req.user.id.toString()) {
       return res.status(400).json({
         message: "Cannot delete yourself",
       });
