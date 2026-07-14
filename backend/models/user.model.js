@@ -30,10 +30,10 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "manager"],
-      default: "user"
+      enum: ["OWNER", "ADMIN", "MANAGER", "USER"],
+      default: "USER"
     },
-    deleted: {
+    isDeleted: {
       type: Boolean,
       default: false
     }

@@ -42,7 +42,7 @@ export const loginWithGoogle = async (req, res, next) => {
     const { name, email, picture } = userData;
     const user = await User.findOne({ email });
     if (user) {
-      if (user.deleted) {
+      if (user.isDeleted) {
         return res.status(403).json({ error: "Your account has been deleted. Contact support to restore your account." });
       }
       const userSession = await createUserSessionService(user._id);

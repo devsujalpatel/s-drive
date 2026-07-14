@@ -9,7 +9,6 @@ export async function checkAuth(req, res, next) {
     return res.status(401).json({ error: "Not logged!" });
   }
 
-
   const session= await Session.findById(sid);
   if (!session) {
     return res.status(401).json({ error: "Session not found" });
@@ -27,7 +26,7 @@ export async function checkAuth(req, res, next) {
 
 export async function checkAdmin(req, res, next) {
   const { user } = req;
-  if (user.role !== "admin") {
+  if (user.role !== "ADMIN") {
     return res.status(401).json({ error: "Unauthorized" });
   }
   next();
@@ -35,7 +34,7 @@ export async function checkAdmin(req, res, next) {
 
 export async function checkManager(req, res, next) {
   const { user } = req;
-  if (user.role !== "manager") {
+  if (user.role !== "MANAGER") {
     return res.status(401).json({ error: "Unauthorized" });
   }
   next();
@@ -43,7 +42,7 @@ export async function checkManager(req, res, next) {
 
 export async function checkDeleted(req, res, next) {
   const { user } = req;
-  if (user.deleted) {
+  if (user.isDeleted) {
     return res.status(401).json({ error: "Your account has been deleted. Please contact support if you need assistance." });
   }
   next();
