@@ -6,7 +6,7 @@ import User from "../models/user.model.js";
 export const getAllUsers = async (req, res, next) => {
   try {
     const [users, sessions] = await Promise.all([
-      User.find().select("_id name email role").lean(),
+      User.find({deleted: false}).select("_id name email role").lean(),
       Session.find().select("userId").lean(),
     ]);
 
@@ -88,10 +88,8 @@ export const deleteUser = async (req, res, next) => {
     }
 
     await Promise.all([
-      User.findByIdAndDelete(userId),
       Session.deleteMany({ userId }),
-      File.deleteMany({ userId }),
-      Directory.deleteMany({ userId }),
+      User.findByIdAndUpdate(userId, { deleted: true }),
     ]);
 
     return res.status(200).json({

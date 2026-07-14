@@ -9,11 +9,20 @@ import { createUserSessionService } from "../services/createSessionService.js";
 // Register
 export const registerUser = async (req, res, next) => {
   const { name, email, password, otp } = req.body;
-
+  
   if (!name || !email || !password) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ error: "User already exists" });
+  }
+  if(existingUser.deleted) {
+    return res.status(400).json({ error: "Your account has been deleted. Please contact support if you need assistance." });
+  }
+  
   if (password.length < 6) {
     return res
       .status(400)
@@ -80,6 +89,13 @@ export const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (user.deleted) {
+      return res.status(401).json({ error: "Your account has been deleted. Please contact support if you need assistance." });
+    }
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ error: "Invalid Credentials" });
     }

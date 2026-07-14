@@ -42,6 +42,9 @@ export const loginWithGoogle = async (req, res, next) => {
     const { name, email, picture } = userData;
     const user = await User.findOne({ email });
     if (user) {
+      if (user.deleted) {
+        return res.status(403).json({ error: "Your account has been deleted. Contact support to restore your account." });
+      }
       const userSession = await createUserSessionService(user._id);
       if (user.picture.includes("https://placehold.net/avatar.png")) {
         user.picture = picture;
@@ -117,9 +120,7 @@ export const googleDriveCallback = async (req, res, next) => {
       googleRefreshToken: tokens.refresh_token,
     });
 
-    return res.redirect(
-      `${process.env.CLIENT_URL}/settings?drive=connected`
-    );
+    return res.redirect(`${process.env.CLIENT_URL}/settings?drive=connected`);
   } catch (err) {
     next(err);
   }

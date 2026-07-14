@@ -32,6 +32,10 @@ const userSchema = new Schema(
       type: String,
       enum: ["user", "admin", "manager"],
       default: "user"
+    },
+    deleted: {
+      type: Boolean,
+      default: false
     }
   },
   { strict: "throw" },
