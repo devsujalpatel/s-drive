@@ -68,7 +68,7 @@ export const recoverUser = async (req, res, next) => {
         message: "User not found",
       });
     }
-    user.deleteAt = false;
+    user.isDeleted = false;
     await user.save();
     return res.status(200).json({
       message: "User recovered successfully",

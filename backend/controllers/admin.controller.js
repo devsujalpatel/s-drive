@@ -3,8 +3,28 @@ import User from "../models/user.model.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
+    if (req.user.role === "OWNER") {
+      const [users, sessions] = await Promise.all([
+        User.find().select("_id name email role isDeleted").lean(),
+        Session.find().select("userId").lean(),
+      ]);
+
+      const loggedInUsers = new Set(
+        sessions.map((session) => session.userId.toString()),
+      );
+      const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
+        id: _id,
+        name,
+        email,
+        role,
+        isDeleted,
+        isLoggedIn: loggedInUsers.has(_id.toString()),
+      }));
+
+      return res.status(200).json(usersWithStatus);
+    }
     const [users, sessions] = await Promise.all([
-      User.find().select("_id name email role isDeleted").lean(),
+      User.find({isDeleted: false}).select("_id name email role isDeleted").lean(),
       Session.find().select("userId").lean(),
     ]);
 

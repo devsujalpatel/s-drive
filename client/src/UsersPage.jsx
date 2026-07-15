@@ -166,6 +166,15 @@ export default function UsersPage() {
     }
   };
 
+  const canRecover = (targetUser) => {
+    if (userRole !== "ADMIN" && userRole !== "OWNER") return false;
+    if (targetUser.role === "OWNER") return false;
+    if (String(targetUser.id) === String(currentUserId)) return false;
+    if (!targetUser.isDeleted) return false;
+
+    return true;
+  };
+
   const canDelete = (targetUser) => {
     if (userRole !== "ADMIN" && userRole !== "OWNER") return false;
     if (targetUser.role === "OWNER") return false;
@@ -173,6 +182,17 @@ export default function UsersPage() {
 
     return true;
   };
+
+  const canSoftDelete = (targetUser) => {
+    if (userRole !== "ADMIN" && userRole !== "OWNER") return false;
+    if (targetUser.role === "OWNER") return false;
+    if (String(targetUser.id) === String(currentUserId)) return false;
+    if (targetUser.isDeleted) return false;
+
+    return true;
+  };
+
+  
 
   useEffect(() => {
     fetchAllUsers();
@@ -186,7 +206,9 @@ export default function UsersPage() {
     setDeletingUserHard(userId);
   };
 
-  const handleRecoverUser = async (userId) => {};
+  const handleRecoverUser = async (userId) => {
+    setUserRecovering(userId);
+  };
 
   return (
     <>
@@ -312,7 +334,7 @@ export default function UsersPage() {
                           <td className="px-6 py-5">
                             <button
                               onClick={() => handleDeleteSoft(user.id)}
-                              disabled={!canDelete(user)}
+                              disabled={!canSoftDelete(user)}
                               className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                             >
                               Soft Delete
@@ -338,7 +360,7 @@ export default function UsersPage() {
                           <td className="px-6 py-5">
                             <button
                               onClick={() => handleRecoverUser(user.id)}
-                              disabled={!canDelete(user)}
+                              disabled={!canRecover(user)}
                               className="rounded-lg cursor-pointer bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                               Recover
