@@ -1,24 +1,22 @@
-import { rm } from "fs/promises";
-import Directory from "../models/directory.model.js";
-import File from "../models/file.model.js";
 import Session from "../models/session.model.js";
 import User from "../models/user.model.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
     const [users, sessions] = await Promise.all([
-      User.find({ isDeleted: false }).select("_id name email role").lean(),
+      User.find().select("_id name email role isDeleted").lean(),
       Session.find().select("userId").lean(),
     ]);
 
     const loggedInUsers = new Set(
       sessions.map((session) => session.userId.toString()),
     );
-    const usersWithStatus = users.map(({ _id, name, email, role }) => ({
+    const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
       id: _id,
       name,
       email,
       role,
+      isDeleted,
       isLoggedIn: loggedInUsers.has(_id.toString()),
     }));
 
@@ -106,57 +104,3 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-export const deleteUserHard = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-
-    if (userId === req.user.id.toString()) {
-      return res.status(400).json({
-        message: "Cannot delete yourself",
-      });
-    }
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
-    if (req.user.role === "MANAGER" && user.role === "ADMIN") {
-      return res.status(403).json({
-        message: "Managers cannot delete admins",
-      });
-    }
-
-    if (req.user.role === "ADMIN" && user.role === "OWNER") {
-      return res.status(403).json({
-        message: "Admins cannot delete owners",
-      });
-    }
-
-    const files = await File.find({ userId });
-    if (!files) {
-      return res.status(404).json({ error: "Files not found!" });
-    }
-
-    await Promise.all(
-      files.map(async (file) => {
-        await rm(`./storage/${file._id}${file.extension}`, { recursive: true });
-      }),
-    );
-
-    await Promise.all([
-      File.deleteMany({ userId }),
-      Directory.deleteMany({ userId }),
-      Session.deleteMany({ userId }),
-      User.findByIdAndDelete(userId),
-    ]);
-
-    return res.status(200).json({
-      message: "User deleted successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};

@@ -19,6 +19,8 @@ import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js"
 import adminRoutes from "./routes/admin.routes.js";
+import ownerRoutes from "./routes/owner.routes.js";
+
 
 // middlewares
 import { checkAuth, checkDeleted } from "./middlewares/auth.middleware.js";
@@ -27,7 +29,8 @@ app.use("/directory", checkAuth, checkDeleted, directoryRoutes);
 app.use("/file", checkAuth, checkDeleted, fileRoutes);
 app.use("/user", userRoutes);
 app.use("/auth", authRoutes);
-app.use("/admin", adminRoutes)
+app.use("/admin", adminRoutes);
+app.use("/owner", ownerRoutes);
 
 app.use((err, req, res, next) => {
   console.log(err);

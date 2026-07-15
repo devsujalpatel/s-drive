@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { deleteUser, deleteUserHard, getAllUsers, logoutById } from "../controllers/admin.controller.js";
+import { deleteUser,  getAllUsers, logoutById } from "../controllers/admin.controller.js";
 import { allowRoles } from "../lib/auth-lib.js";
-import { checkAuth, checkAdmin, checkManager, checkDeleted } from "../middlewares/auth.middleware.js";
+import { checkAuth, checkDeleted } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -11,6 +11,5 @@ router.post("/logout", checkAuth, checkDeleted, allowRoles(["OWNER", "ADMIN", "M
 
 router.delete("/users/:userId", checkAuth, checkDeleted,allowRoles(["OWNER", "ADMIN"]), deleteUser);
 
-router.delete("/users/:userId/hard", checkAuth, checkDeleted, allowRoles(["OWNER"]), deleteUserHard);
 
 export default router;

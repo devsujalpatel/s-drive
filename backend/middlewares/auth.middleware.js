@@ -23,7 +23,6 @@ export async function checkAuth(req, res, next) {
   next();
 }
 
-
 export async function checkAdmin(req, res, next) {
   const { user } = req;
   if (user.role !== "ADMIN") {
