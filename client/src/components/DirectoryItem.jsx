@@ -29,18 +29,22 @@ function DirectoryItem({
   function renderFileIcon(iconString) {
     switch (iconString) {
       case "pdf":
-        return <FaFilePdf />;
+        return <FaFilePdf className="text-xl text-red-500" />;
+
       case "image":
-        return <FaFileImage />;
+        return <FaFileImage className="text-xl text-emerald-500" />;
+
       case "video":
-        return <FaFileVideo />;
+        return <FaFileVideo className="text-xl text-violet-500" />;
+
       case "archive":
-        return <FaFileArchive />;
+        return <FaFileArchive className="text-xl text-yellow-500" />;
+
       case "code":
-        return <FaFileCode />;
-      case "alt":
+        return <FaFileCode className="text-xl text-sky-500" />;
+
       default:
-        return <FaFileAlt />;
+        return <FaFileAlt className="text-xl text-neutral-500" />;
     }
   }
 
@@ -48,48 +52,78 @@ function DirectoryItem({
 
   return (
     <div
-      className="list-item hoverable-row"
       onClick={() =>
         !(activeContextMenu || isUploading)
           ? handleRowClick(item.isDirectory ? "directory" : "file", item.id)
           : null
       }
       onContextMenu={(e) => handleContextMenu(e, item.id)}
+      className="group relative flex w-full flex-col rounded-2xl cursor-pointer border border-neutral-200/60 ring-1 ring-neutral-100/20 bg-white px-4 py-3 transition-all duration-200  hover:border-neutral-200 hover:shadow-xs "
     >
-      <div className="item-left-container">
-        <div className="item-left">
-          {item.isDirectory ? (
-            <FaFolder className="folder-icon" />
-          ) : (
-            renderFileIcon(getFileIcon(item.name))
-          )}
-          <span>{item.name}</span>
+      {/* Main Row */}
+      <div className="flex items-center justify-between">
+        {/* Left */}
+        <div className="flex min-w-0 items-center gap-4">
+          <div
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
+              item.isDirectory
+                ? "bg-amber-100 text-amber-600"
+                : "bg-blue-100 text-blue-600"
+            }`}
+          >
+            {item.isDirectory ? (
+              <FaFolder className="text-xl" />
+            ) : (
+              renderFileIcon(getFileIcon(item.name))
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <p className="truncate font-medium text-neutral-900">{item.name}</p>
+
+            <p className="text-sm text-neutral-500">
+              {item.isDirectory ? "Folder" : "File"}
+            </p>
+          </div>
         </div>
 
-        {/* Three dots for context menu */}
-        <div
-          className="context-menu-trigger"
-          onClick={(e) => handleContextMenu(e, item.id)}
+        {/* Three Dots */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleContextMenu(e, item.id);
+          }}
+          className="rounded-lg p-2 text-neutral-500 opacity-0 transition-all duration-200 hover:bg-neutral-100 hover:text-neutral-900 group-hover:opacity-100"
         >
-          <BsThreeDotsVertical />
-        </div>
+          <BsThreeDotsVertical className="text-lg" />
+        </button>
       </div>
 
-      {/* PROGRESS BAR: shown if an item is in queue or actively uploading */}
+      {/* Upload Progress */}
       {isUploadingItem && (
-        <div className="progress-container">
-          <span className="progress-value">{Math.floor(uploadProgress)}%</span>
-          <div
-            className="progress-bar"
-            style={{
-              width: `${uploadProgress}%`,
-              backgroundColor: uploadProgress === 100 ? "#039203" : "#007bff",
-            }}
-          ></div>
+        <div className="mt-4">
+          <div className="mb-2 flex items-center justify-between text-xs font-medium text-neutral-500">
+            <span>
+              {uploadProgress === 100 ? "Finishing..." : "Uploading..."}
+            </span>
+
+            <span>{Math.floor(uploadProgress)}%</span>
+          </div>
+
+          <div className="h-2 overflow-hidden rounded-full bg-neutral-200">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                uploadProgress === 100 ? "bg-green-500" : "bg-blue-600"
+              }`}
+              style={{
+                width: `${uploadProgress}%`,
+              }}
+            />
+          </div>
         </div>
       )}
 
-      {/* Context menu, if active */}
+      {/* Context Menu */}
       {activeContextMenu === item.id && (
         <ContextMenu
           item={item}

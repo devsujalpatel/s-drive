@@ -1,121 +1,39 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
-import useAuthStore from "./store/useAuthStore";
 import { LoginWithGoogle } from "./components/LoginWithGoogle";
 
+import { HardDrive } from "lucide-react";
+
 const Login = () => {
-  const BASE_URL = import.meta.env.VITE_API_URL;
-
-  const [formData, setFormData] = useState({
-    email: "sujal7455@gmail.com",
-    password: "12345678",
-  });
-
-  // serverError will hold the error message from the server
-  const [serverError, setServerError] = useState("");
-
-  const setEmail = useAuthStore((state) => state.setEmail);
-
-  const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Clear the server error as soon as the user starts typing in either field
-    if (serverError) {
-      setServerError("");
-    }
-
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setEmail(formData.email);
-
-    try {
-      const response = await fetch(`${BASE_URL}/user/login`, {
-        method: "POST",
-        body: JSON.stringify(formData),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      if (data.error) {
-        // If there's an error, set the serverError message
-        setServerError(data.error);
-      } else {
-        // On success, navigate to home or any other protected route
-        navigate("/verify-otp");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      setServerError("Something went wrong. Please try again.");
-    }
-  };
-
-  // If there's an error, we'll add "input-error" class to both fields
-  const hasError = Boolean(serverError);
-
   return (
-    <div className="container">
-      <h2 className="heading">Login</h2>
-      <form className="form" onSubmit={handleSubmit}>
-        {/* Email */}
-        <div className="form-group">
-          <label htmlFor="email" className="label">
-            Email
-          </label>
-          <input
-            className={`input ${hasError ? "input-error" : ""}`}
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Enter your email"
-            required
-          />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-linear-to-br from-neutral-50 via-white to-neutral-100 px-6">
+      {/* Background Blur */}
+      <div className="absolute -left-32 top-20 h-72 w-72 rounded-full bg-blue-500/15 blur-3xl" />
+      <div className="absolute -right-32 bottom-20 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl" />
+
+      <div className="relative w-full max-w-md rounded-3xl border border-neutral-200 bg-white/80 p-10 shadow-2xl backdrop-blur-xl">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10">
+            <HardDrive className="h-8 w-8 text-blue-600" />
+          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+            Welcome to Drive
+          </h1>
+
+          <p className="text-sm leading-6 text-neutral-600">
+            Store, organize, and access your files securely from anywhere. Sign
+            in with your Google account to continue.
+          </p>
         </div>
 
-        {/* Password */}
-        <div className="form-group">
-          <label htmlFor="password" className="label">
-            Password
-          </label>
-          <input
-            className={`input ${hasError ? "input-error" : ""}`}
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Enter your password"
-            required
-          />
-          {/* Absolutely-positioned error message below password field */}
-          {serverError && <span className="error-msg">{serverError}</span>}
+        <div className="mt-8">
+          <LoginWithGoogle />
         </div>
 
-        <button type="submit" className="submit-button">
-          Login
-        </button>
-      </form>
-
-      {/* Link to the register page */}
-      <p className="link-text">
-        Don't have an account? <Link to="/register">Register</Link>
-      </p>
-
-      <LoginWithGoogle />
-
+        <p className="mt-6 text-center text-xs text-neutral-500">
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+        </p>
+      </div>
     </div>
   );
 };

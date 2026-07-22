@@ -1,5 +1,5 @@
-import Session from "../models/session.model.js";
 import User from "../models/user.model.js";
+import { getSessionService } from "../services/sessionService.js";
 
 export async function checkAuth(req, res, next) {
   const { sid } = req.signedCookies;
@@ -9,7 +9,7 @@ export async function checkAuth(req, res, next) {
     return res.status(401).json({ error: "Not logged!" });
   }
 
-  const session= await Session.findById(sid);
+  const session= await getSessionService(sid);
   if (!session) {
     return res.status(401).json({ error: "Session not found" });
   }

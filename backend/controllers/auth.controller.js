@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 import { verifyIdToken } from "../services/googleAuthService.js";
 import { sendOtpService } from "../services/sendOtpService.js";
 import mongoose from "mongoose";
-import { createUserSessionService } from "../services/createSessionService.js";
+import { createUserSessionService } from "../services/sessionService.js";
 import { oauth2Client } from "../lib/google.js";
 
 export const sendOtp = async (req, res, next) => {
@@ -45,12 +45,13 @@ export const loginWithGoogle = async (req, res, next) => {
       if (user.isDeleted) {
         return res.status(403).json({ error: "Your account has been deleted. Contact support to restore your account." });
       }
-      const userSession = await createUserSessionService(user._id);
+      const sessionId = crypto.randomUUID();
+       await createUserSessionService(user._id, sessionId);
       if (user.picture.includes("https://placehold.net/avatar.png")) {
         user.picture = picture;
         await user.save();
       }
-      res.cookie("sid", userSession._id, {
+      res.cookie("sid", sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         signed: true,
@@ -76,10 +77,13 @@ export const loginWithGoogle = async (req, res, next) => {
         { _id: userId, email, name, picture, rootDirId, picture },
         { session },
       );
+      const sessionId = crypto.randomUUID();
+      const response = await createUserSessionService(newUser._id, sessionId);
+      if (!response) {
+        return res.status(500).json({ error: "failed to create session" });
+      }
 
-      const userSession = await createUserSessionService(newUser._id);
-
-      res.cookie("sid", userSession._id, {
+      res.cookie("sid", sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         signed: true,

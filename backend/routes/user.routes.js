@@ -2,20 +2,20 @@ import express from "express";
 import { checkAuth, checkDeleted } from "../middlewares/auth.middleware.js";
 import {
   getUser,
-  loginUser,
-  createSession,
+  // loginUser,
+  // createSession,
   logoutUser,
   logoutAllSessions,
-  registerUser,
+  // registerUser,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
+// router.post("/register", registerUser);
 
-router.post("/login", loginUser);
+// router.post("/login", loginUser);
 
-router.post("/create-session", createSession);
+// router.post("/create-session", createSession);
 
 router.get("/", checkAuth, checkDeleted, getUser);
 
