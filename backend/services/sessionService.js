@@ -1,6 +1,5 @@
 import { redisClient } from "../lib/redis.js";
 
-const MAX_DEVICES = 2;
 
 export const createUserSessionService = async (userId, sessionId) => {
   const redisKey = `session:${sessionId}`;
@@ -13,6 +12,13 @@ export const createUserSessionService = async (userId, sessionId) => {
   );
   await redisClient.expire(redisKey, sessionExpiryTime);
 };
+
+export const deleteSessionServiceByUserId = async (userId) => {
+  const sessionId = await redisClient.json.get(`user:${userId}`, { path: "$.sessionId" });
+  const redisKey = `session:${sessionId}`;
+  await redisClient.json.del(redisKey);
+};
+
 export const getSessionService = async (sessionId) => {
   const redisKey = `session:${sessionId}`;
   const session = await redisClient.json.get(redisKey);

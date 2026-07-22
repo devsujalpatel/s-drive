@@ -1,8 +1,9 @@
 import { rm } from "fs/promises";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
-import Session from "../models/session.model.js";
 import User from "../models/user.model.js";
+import { deleteSessionServiceByUserId} from "../services/sessionService.js";
+
 
 export const deleteUserHard = async (req, res, next) => {
   try {
@@ -47,7 +48,7 @@ export const deleteUserHard = async (req, res, next) => {
     await Promise.all([
       File.deleteMany({ userId }),
       Directory.deleteMany({ userId }),
-      Session.deleteMany({ userId }),
+      deleteSessionServiceByUserId(userId),
       User.findByIdAndDelete(userId),
     ]);
 

@@ -1,43 +1,41 @@
-import Session from "../models/session.model.js";
+import { redis } from "googleapis/build/src/apis/redis/index.js";
 import User from "../models/user.model.js";
+import { deleteSessionServiceByUserId } from "../services/sessionService.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
     if (req.user.role === "OWNER") {
-      const [users, sessions] = await Promise.all([
+      const [users] = await Promise.all([
         User.find().select("_id name email role isDeleted").lean(),
-        Session.find().select("userId").lean(),
       ]);
 
-      const loggedInUsers = new Set(
-        sessions.map((session) => session.userId.toString()),
-      );
+      // const loggedInUsers = new Set(
+      //   sessions.map((session) => session.userId.toString()),
+      // );
       const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
         id: _id,
         name,
         email,
         role,
         isDeleted,
-        isLoggedIn: loggedInUsers.has(_id.toString()),
+        // isLoggedIn: loggedInUsers.has(_id.toString()),
       }));
 
       return res.status(200).json(usersWithStatus);
     }
-    const [users, sessions] = await Promise.all([
-      User.find({isDeleted: false}).select("_id name email role isDeleted").lean(),
-      Session.find().select("userId").lean(),
+    const [users] = await Promise.all([
+      User.find({ isDeleted: false }).select("_id name email role isDeleted").lean(),
     ]);
 
-    const loggedInUsers = new Set(
-      sessions.map((session) => session.userId.toString()),
-    );
+    // const loggedInUsers = new Set(
+    // );
     const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
       id: _id,
       name,
       email,
       role,
       isDeleted,
-      isLoggedIn: loggedInUsers.has(_id.toString()),
+      // isLoggedIn: loggedInUsers.has(_id.toString()),
     }));
 
     return res.status(200).json(usersWithStatus);
@@ -70,7 +68,11 @@ export const logoutById = async (req, res, next) => {
       });
     }
 
-    await Session.deleteMany({ userId });
+    for (const session of loggedInUsers) {
+      if (session.userId === userId) {
+        await deleteSessionServiceByUserId(session.userId);
+      }
+    }
 
     return res.status(200).json({
       message: "User logged out successfully",
@@ -112,7 +114,7 @@ export const deleteUser = async (req, res, next) => {
     }
 
     await Promise.all([
-      Session.deleteMany({ userId }),
+      deleteSessionServiceByUserId(userId),
       User.findByIdAndUpdate(userId, { isDeleted: true }),
     ]);
 

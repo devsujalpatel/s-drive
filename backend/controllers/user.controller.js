@@ -1,7 +1,6 @@
 // import mongoose from "mongoose";
 // import User from "../models/user.model.js";
 // import Directory from "../models/directory.model.js";
-import Session from "../models/session.model.js";
 import { deleteSessionService } from "../services/sessionService.js";
 // import OTP from "../models/otpModel.js";
 // import { sendOtpService } from "../services/sendOtpService.js";
@@ -166,7 +165,6 @@ export const logoutUser = async (req, res, next) => {
 
 export const logoutAllSessions = async (req, res, next) => {
   try {
-    await Session.deleteMany({ userId: req.user._id });
     res.clearCookie("sid");
     res.status(204).end();
   } catch (error) {
