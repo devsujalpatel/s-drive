@@ -1,42 +1,35 @@
-import { redis } from "googleapis/build/src/apis/redis/index.js";
+import { redisClient } from "../lib/redis.js";
 import User from "../models/user.model.js";
 import { deleteSessionServiceByUserId } from "../services/sessionService.js";
 
 export const getAllUsers = async (req, res, next) => {
   try {
-    if (req.user.role === "OWNER") {
-      const [users] = await Promise.all([
-        User.find().select("_id name email role isDeleted").lean(),
-      ]);
+    const users = await User.find(
+      req.user.role === "OWNER" ? {} : { isDeleted: false }
+    )
+      .select("_id name email role isDeleted")
+      .lean();
 
-      // const loggedInUsers = new Set(
-      //   sessions.map((session) => session.userId.toString()),
-      // );
-      const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
+    const searchResult = await redisClient.ft.search(
+      "userIdIdx",
+      "*"
+    );
+
+    const loggedInUsers = new Set(
+      searchResult.documents.map((doc) => doc.value.userId)
+    );
+
+    const usersWithStatus = users.map(
+      ({ _id, name, email, role, isDeleted }) => ({
         id: _id,
         name,
         email,
         role,
         isDeleted,
-        // isLoggedIn: loggedInUsers.has(_id.toString()),
-      }));
+        isLoggedIn: loggedInUsers.has(_id.toString()),
+      })
+    );
 
-      return res.status(200).json(usersWithStatus);
-    }
-    const [users] = await Promise.all([
-      User.find({ isDeleted: false }).select("_id name email role isDeleted").lean(),
-    ]);
-
-    // const loggedInUsers = new Set(
-    // );
-    const usersWithStatus = users.map(({ _id, name, email, role, isDeleted }) => ({
-      id: _id,
-      name,
-      email,
-      role,
-      isDeleted,
-      // isLoggedIn: loggedInUsers.has(_id.toString()),
-    }));
 
     return res.status(200).json(usersWithStatus);
   } catch (error) {

@@ -4,7 +4,12 @@ import { redisClient } from "../lib/redis.js";
 export const createUserSessionService = async (userId, sessionId) => {
   const redisKey = `session:${sessionId}`;
   const sessionExpiryTime = 60 * 60 * 24;
-
+  const allSessions = await redisClient.ft.search(`userIdIdx`, `@userId:{${userId}}`, {
+    RETURN: []
+  });
+  if (allSessions.total >= 2) {
+    await redisClient.del(allSessions.documents[0].id);
+  }
   await redisClient.json.set(
     redisKey,
     "$",
@@ -14,9 +19,13 @@ export const createUserSessionService = async (userId, sessionId) => {
 };
 
 export const deleteSessionServiceByUserId = async (userId) => {
-  const sessionId = await redisClient.json.get(`user:${userId}`, { path: "$.sessionId" });
-  const redisKey = `session:${sessionId}`;
-  await redisClient.json.del(redisKey);
+ // delete all sessions for the user
+  const allSessions = await redisClient.ft.search(`userIdIdx`, `@userId:{${userId}}`, {
+    RETURN: []
+  });
+  for (const session of allSessions.documents) {
+    await redisClient.del(session.id);
+  }
 };
 
 export const getSessionService = async (sessionId) => {
@@ -25,7 +34,11 @@ export const getSessionService = async (sessionId) => {
   return session;
 };
 
-export const deleteSessionService = async (sessionId) => {
-  const redisKey = `session:${sessionId}`;
-  await redisClient.json.del(redisKey);
+export const deleteSessionService = async (userId) => {
+  const allSessions = await redisClient.ft.search(`userIdIdx`, `@userId:{${userId}}`, {
+    RETURN: []
+  });
+  if (allSessions.total >= 2) {
+    await redisClient.del(allSessions.documents[allSessions.total - 1].id);
+  }
 };

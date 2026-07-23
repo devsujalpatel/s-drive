@@ -151,19 +151,16 @@ export default function UsersPage() {
 
   const canLogout = (targetUser) => {
     if (!targetUser.isLoggedIn) return false;
-
-    // Nobody can logout themselves
-    if (targetUser.id === currentUserId) return false;
+    if (String(targetUser.id) === String(currentUserId)) return false;
     if (targetUser.role === "OWNER") return false;
 
-    switch (userRole) {
-      case "ADMIN":
-      case "MANAGER":
-        return targetUser.role !== "ADMIN";
+    if (userRole === "OWNER") return true;
 
-      default:
-        return false;
+    if (userRole === "ADMIN" || userRole === "MANAGER") {
+      return targetUser.role !== "ADMIN";
     }
+
+    return false;
   };
 
   const canRecover = (targetUser) => {
@@ -191,8 +188,6 @@ export default function UsersPage() {
 
     return true;
   };
-
-  
 
   useEffect(() => {
     fetchAllUsers();
@@ -323,7 +318,7 @@ export default function UsersPage() {
                           <button
                             onClick={() => logoutUser(user.id)}
                             disabled={!canLogout(user)}
-                            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                            className="rounded-lg border border-neutral-400/20 ring-1 ring-neutral-300/20 px-4 py-2 text-sm font-medium transition hover:bg-neutral-200 disabled:hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-20 cursor-pointer"
                           >
                             Logout
                           </button>

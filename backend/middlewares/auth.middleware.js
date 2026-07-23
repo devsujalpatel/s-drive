@@ -9,7 +9,7 @@ export async function checkAuth(req, res, next) {
     return res.status(401).json({ error: "Not logged!" });
   }
 
-  const session= await getSessionService(sid);
+  const session = await getSessionService(sid);
   if (!session) {
     return res.status(401).json({ error: "Session not found" });
   }
