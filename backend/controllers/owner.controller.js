@@ -2,12 +2,12 @@ import { rm } from "fs/promises";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 import User from "../models/user.model.js";
-import { deleteSessionServiceByUserId} from "../services/sessionService.js";
-
+import { deleteSessionServiceByUserId } from "../services/sessionService.js";
 
 export const deleteUserHard = async (req, res, next) => {
   try {
     const { userId } = req.params;
+    
 
     if (userId === req.user.id.toString()) {
       return res.status(400).json({
