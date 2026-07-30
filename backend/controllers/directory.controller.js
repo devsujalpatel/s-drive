@@ -23,7 +23,6 @@ export const getDirectory = async (req, res, next) => {
       parentDirId: directoryData._id,
     }).lean();
 
-    // const files = await fileCollection.find({ directoryId: id }).toArray();
     const files = await File.find({
       parentDirId: directoryData._id,
     }).lean();
