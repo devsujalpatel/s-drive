@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./UsersPage.css";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "./lib/axios";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -17,135 +18,94 @@ export default function UsersPage() {
   const navigate = useNavigate();
 
   const logoutUser = async (userId) => {
-    alert(`Logging out user with ID: ${userId}`);
     try {
-      const response = await fetch(`${BASE_URL}/admin/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId }),
-        credentials: "include",
+      await api.post("/admin/logout", {
+        userId,
       });
-      if (response.ok) {
-        setUsers((prevUsers) =>
-          prevUsers.map((user) =>
-            user.id === userId ? { ...user, isLoggedIn: false } : user,
-          ),
-        );
-      } else {
-        console.error("Error logging out:", response.statusText);
-      }
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, isLoggedIn: false } : user,
+        ),
+      );
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error logging out:",
+        error.response?.data || error.message,
+      );
     }
   };
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(`${BASE_URL}/admin/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      } else {
-        console.error("Error Deleting user:", response.statusText);
-      }
+      await api.delete(`/admin/users/${userId}`);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error Deleting user:",
+        error.response?.data || error.message,
+      );
     }
   };
   const hardDeleteUser = async (userId) => {
     try {
-      const response = await fetch(`${BASE_URL}/owner/users/${userId}/hard`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      } else {
-        console.error("Error Hard Deleting user:", response.statusText);
-      }
+      await api.delete(`/owner/users/${userId}/hard`);
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error Hard Deleting user:",
+        error.response?.data || error.message,
+      );
     }
   };
   const recoverUser = async (userId) => {
     try {
-      const response = await fetch(
-        `${BASE_URL}/owner/users/${userId}/recover`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        },
-      );
-      if (response.ok) {
-        fetchAllUsers();
-      } else {
-        console.error("Error Recovering user:", response.statusText);
-      }
+      await api.post(`/owner/users/${userId}/recover`);
+      fetchAllUsers();
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error Recovering user:",
+        error.response?.data || error.message,
+      );
     }
   };
 
   const fetchAllUsers = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${BASE_URL}/admin/users`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
-      } else if (response.status === 401) {
-        console.error("Unauthorized: ", response.statusText);
-        setIsLoading(false);
-        navigate("/");
-      } else {
-        setIsLoading(false);
-        console.error("Error fetching users:", response.statusText);
-      }
+
+      const { data } = await api.get("/admin/users");
+
+      setUsers(data);
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Error fetching users:",
+        error.response?.data || error.message,
+      );
     } finally {
       setIsLoading(false);
     }
   };
+
   const fetchUser = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/user`, {
-        credentials: "include",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        // Set user info if logged inconst data = await response.json();
-        setUserRole(data.role);
-        setUserName(data.name);
-        setCurrentUserId(data.id);
-      } else if (response.status === 401) {
-        // User not logged in
+      const { data } = await api.get("/user");
+
+      setUserRole(data.role);
+      setUserName(data.name);
+      setCurrentUserId(data.id);
+    } catch (error) {
+      if (error.response?.status === 401) {
         navigate("/login");
         setUserRole("");
         setUserName("");
-      } else {
-        // Handle other error statuses if needed
-        console.error("Error fetching user info:", response.status);
+        setCurrentUserId(null);
+        return;
       }
-    } catch (err) {
-      console.error("Error fetching user info:", err);
+
+      console.error(
+        "Error fetching user info:",
+        error.response?.data || error.message,
+      );
     }
   };
 

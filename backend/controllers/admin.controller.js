@@ -5,18 +5,17 @@ import { deleteSessionServiceByUserId } from "../services/sessionService.js";
 export const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find(
-      req.user.role === "OWNER" ? {} : { isDeleted: false }
+      req.user.role === "OWNER" ? {} : { isDeleted: false },
     )
       .select("_id name email role isDeleted")
       .lean();
 
-    const searchResult = await redisClient.ft.search(
-      "userIdIdx",
-      "*"
-    );
+    const searchResult = await redisClient.ft.search("userIdIdx", "*");
+
+    console.log(searchResult);
 
     const loggedInUsers = new Set(
-      searchResult.documents.map((doc) => doc.value.userId)
+      searchResult.documents.map((doc) => doc.value.userId),
     );
 
     const usersWithStatus = users.map(
@@ -27,9 +26,8 @@ export const getAllUsers = async (req, res, next) => {
         role,
         isDeleted,
         isLoggedIn: loggedInUsers.has(_id.toString()),
-      })
+      }),
     );
-
 
     return res.status(200).json(usersWithStatus);
   } catch (error) {
@@ -118,4 +116,3 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
-

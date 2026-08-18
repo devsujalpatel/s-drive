@@ -5,6 +5,7 @@ import CreateDirectoryModal from "./components/CreateDirectoryModal";
 import RenameModal from "./components/RenameModal";
 import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
+import api from "./lib/axios";
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -42,48 +43,30 @@ function DirectoryView() {
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
 
   /**
-   * Utility: handle fetch errors
-   */
-  async function handleFetchErrors(response) {
-    if (!response.ok) {
-      let errMsg = `Request failed with status ${response.status}`;
-      try {
-        const data = await response.json();
-        if (data.error) errMsg = data.error;
-      } catch (_) {
-        // If JSON parsing fails, default errMsg stays
-      }
-      throw new Error(errMsg);
-    }
-    return response;
-  }
-
-  /**
    * Fetch directory contents
    */
   async function getDirectoryItems() {
-    setErrorMessage(""); // clear any existing error
-    try {
-      const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
-        credentials: "include",
-      });
+    setErrorMessage("");
 
-      if (response.status === 401) {
+    try {
+      const { data } = await api.get(`/directory/${dirId || ""}`);
+
+      setDirectoryName(dirId ? data.name : "My Drive");
+
+      // New items on top
+      setDirectoriesList([...data.directories].reverse());
+      setFilesList([...data.files].reverse());
+    } catch (error) {
+      if (error.response?.status === 401) {
         navigate("/login");
         return;
       }
 
-      await handleFetchErrors(response);
-      const data = await response.json();
-
-      // Set directory name
-      setDirectoryName(dirId ? data.name : "My Drive");
-
-      // Reverse directories and files so new items show on top
-      setDirectoriesList([...data.directories].reverse());
-      setFilesList([...data.files].reverse());
-    } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error.response?.data?.error ||
+          error.message ||
+          "Failed to fetch directory contents",
+      );
     }
   }
 
@@ -183,72 +166,90 @@ function DirectoryView() {
   /**
    * Upload items in queue one by one
    */
-  function processUploadQueue(queue) {
+  async function processUploadQueue(queue) {
     if (queue.length === 0) {
-      // No more items to upload
       setIsUploading(false);
       setUploadQueue([]);
+
       setTimeout(() => {
         getDirectoryItems();
       }, 1000);
+
       return;
     }
 
-    // Take first item
     const [currentItem, ...restQueue] = queue;
 
-    // Mark it as isUploading: true
     setFilesList((prev) =>
-      prev.map((f) =>
-        f.id === currentItem.id ? { ...f, isUploading: true } : f
-      )
+      prev.map((file) =>
+        file.id === currentItem.id ? { ...file, isUploading: true } : file,
+      ),
     );
 
-    // Start upload
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${BASE_URL}/file/${dirId || ""}`, true);
-    xhr.withCredentials = true;
-    xhr.setRequestHeader("filename", currentItem.name);
+    try {
+      const response = await api.post(
+        `/file/${dirId || ""}`,
+        currentItem.file,
+        {
+          headers: {
+            filename: currentItem.name,
+          },
 
-    xhr.upload.addEventListener("progress", (evt) => {
-      if (evt.lengthComputable) {
-        const progress = (evt.loaded / evt.total) * 100;
-        setProgressMap((prev) => ({ ...prev, [currentItem.id]: progress }));
+          onUploadProgress: (event) => {
+            if (event.total) {
+              const progress = (event.loaded / event.total) * 100;
+
+              setProgressMap((prev) => ({
+                ...prev,
+                [currentItem.id]: progress,
+              }));
+            }
+          },
+
+          // Allows cancellation with AbortController
+          signal: currentItem.controller?.signal,
+        },
+      );
+
+      console.log("Upload successful:", response.data);
+    } catch (error) {
+      if (error.code === "ERR_CANCELED") {
+        console.log(`Upload cancelled: ${currentItem.name}`);
+      } else {
+        console.error(
+          `Upload failed: ${currentItem.name}`,
+          error.response?.data || error.message,
+        );
       }
-    });
-
-    xhr.addEventListener("load", () => {
-      // Move on to the next item
+    } finally {
+      // Move to next item
       processUploadQueue(restQueue);
-    });
-
-    // If user cancels, remove from the queue
-    setUploadXhrMap((prev) => ({ ...prev, [currentItem.id]: xhr }));
-    xhr.send(currentItem.file);
+    }
   }
-
   /**
    * Cancel an in-progress upload
    */
   function handleCancelUpload(tempId) {
-    const xhr = uploadXhrMap[tempId];
-    if (xhr) {
-      xhr.abort();
+    const controller = uploadControllerMap[tempId];
+
+    if (controller) {
+      controller.abort();
     }
-    // Remove it from queue if still there
+
+    // Remove from queue
     setUploadQueue((prev) => prev.filter((item) => item.id !== tempId));
 
-    // Remove from filesList
-    setFilesList((prev) => prev.filter((f) => f.id !== tempId));
+    // Remove from files list
+    setFilesList((prev) => prev.filter((file) => file.id !== tempId));
 
-    // Remove from progressMap
+    // Remove from progress map
     setProgressMap((prev) => {
       const { [tempId]: _, ...rest } = prev;
       return rest;
     });
 
-    // Remove from Xhr map
-    setUploadXhrMap((prev) => {
+    // Remove controller
+    setUploadControllerMap((prev) => {
       const copy = { ...prev };
       delete copy[tempId];
       return copy;
@@ -261,10 +262,7 @@ function DirectoryView() {
   async function handleDeleteFile(id) {
     setErrorMessage("");
     try {
-      const response = await fetch(`${BASE_URL}/file/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      await api.delete(`/file/${id}`);
       await handleFetchErrors(response);
       getDirectoryItems();
     } catch (error) {
@@ -275,10 +273,7 @@ function DirectoryView() {
   async function handleDeleteDirectory(id) {
     setErrorMessage("");
     try {
-      const response = await fetch(`${BASE_URL}/directory/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      await api.delete(`/directory/${id}`);
       await handleFetchErrors(response);
       getDirectoryItems();
     } catch (error) {
@@ -292,20 +287,23 @@ function DirectoryView() {
   async function handleCreateDirectory(e) {
     e.preventDefault();
     setErrorMessage("");
+
     try {
-      const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
-        method: "POST",
-        headers: {
-          dirname: newDirname,
-        },
-        credentials: "include",
+      await api.post(`/directory/${dirId || ""}`, {
+        dirname: newDirname,
       });
-      await handleFetchErrors(response);
+
       setNewDirname("New Folder");
       setShowCreateDirModal(false);
-      getDirectoryItems();
+
+      await getDirectoryItems();
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to create directory",
+      );
     }
   }
 
@@ -322,32 +320,31 @@ function DirectoryView() {
   async function handleRenameSubmit(e) {
     e.preventDefault();
     setErrorMessage("");
+
     try {
       const url =
+        renameType === "file" ? `/file/${renameId}` : `/directory/${renameId}`;
+
+      const payload =
         renameType === "file"
-          ? `${BASE_URL}/file/${renameId}`
-          : `${BASE_URL}/directory/${renameId}`;
-      const response = await fetch(url, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(
-          renameType === "file"
-            ? { newFilename: renameValue }
-            : { newDirName: renameValue }
-        ),
-        credentials: "include",
-      });
-      await handleFetchErrors(response);
+          ? { newFilename: renameValue }
+          : { newDirName: renameValue };
+
+      await api.patch(url, payload);
 
       setShowRenameModal(false);
       setRenameValue("");
       setRenameType(null);
       setRenameId(null);
-      getDirectoryItems();
+
+      await getDirectoryItems();
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to rename",
+      );
     }
   }
 
@@ -382,7 +379,6 @@ function DirectoryView() {
     ...filesList.map((f) => ({ ...f, isDirectory: false })),
   ];
 
-  
   return (
     <div className="directory-view">
       {/* Top error message for general errors */}

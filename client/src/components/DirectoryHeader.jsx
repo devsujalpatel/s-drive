@@ -8,6 +8,7 @@ import {
   FaSignInAlt,
   FaGoogleDrive,
 } from "react-icons/fa";
+import api from "../lib/axios";
 
 function DirectoryHeader({
   directoryName,
@@ -31,33 +32,37 @@ function DirectoryHeader({
   // -------------------------------------------
   // 1. Fetch user info from /user on mount
   // -------------------------------------------
-  useEffect(() => {
-    async function fetchUser() {
-      try {
-        const response = await fetch(`${BASE_URL}/user`, {
-          credentials: "include",
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Set user info if logged in
-          setUserName(data.name);
-          setUserEmail(data.email);
-          setProfile(data.profile);
-          setLoggedIn(true);
-        } else if (response.status === 401) {
-          // User not logged in
-          setUserName("Guest User");
-          setUserEmail("guest@example.com");
-          setProfile(null);
-          setLoggedIn(false);
-        } else {
-          // Handle other error statuses if needed
-          console.error("Error fetching user info:", response.status);
-        }
-      } catch (err) {
-        console.error("Error fetching user info:", err);
+
+  async function fetchUser() {
+    try {
+      const { data } = await api.get("/user");
+
+      setUserName(data.name);
+      setUserEmail(data.email);
+      setProfile(data.profile);
+      setLoggedIn(true);
+
+      return data;
+    } catch (error) {
+      if (error.response?.status === 401) {
+        setUserName("Guest User");
+        setUserEmail("guest@example.com");
+        setProfile(null);
+        setLoggedIn(false);
+
+        return null;
       }
+
+      console.error(
+        "Error fetching user info:",
+        error.response?.data || error.message,
+      );
+
+      throw error;
     }
+  }
+
+  useEffect(() => {
     fetchUser();
   }, [BASE_URL]);
 
@@ -73,23 +78,16 @@ function DirectoryHeader({
   // -------------------------------------------
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/user/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (response.ok) {
-        console.log("Logged out successfully");
-        // Optionally reset local state
-        setLoggedIn(false);
-        setUserName("Guest User");
-        setUserEmail("guest@example.com");
-        setProfile(null);
-        navigate("/login");
-      } else {
-        console.error("Logout failed");
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
+      await api.post("/user/logout");
+
+      setLoggedIn(false);
+      setUserName("Guest User");
+      setUserEmail("guest@example.com");
+      setProfile(null);
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error.response?.data || error.message);
     } finally {
       setShowUserMenu(false);
     }
@@ -97,21 +95,14 @@ function DirectoryHeader({
 
   const handleLogoutAll = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/user/logout-all`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (response.ok) {
-        console.log("Logged out successfully");
-        // Optionally reset local state
-        setLoggedIn(false);
-        setUserName("Guest User");
-        setUserEmail("guest@example.com");
-        setProfile(null);
-        navigate("/login");
-      } else {
-        console.error("Logout failed");
-      }
+      await api.post("/user/logout-all");
+
+      setLoggedIn(false);
+      setUserName("Guest User");
+      setUserEmail("guest@example.com");
+      setProfile(null);
+
+      navigate("/login");
     } catch (err) {
       console.error("Logout error:", err);
     } finally {

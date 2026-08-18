@@ -7,6 +7,8 @@ const redisClient = await createClient({
   .connect();
 
 try {
+  console.log(" Creating userIdIdx...");
+
   await redisClient.ft.create(
     "userIdIdx",
     {
@@ -17,13 +19,21 @@ try {
     },
     {
       ON: "JSON",
-      PREFIX: "user:",
+      PREFIX: "session:",
     },
   );
+
+  console.log("✅ userIdIdx created");
 } catch (err) {
+  console.log("❌ ft.create threw:", err);
+
   if (!err.message.includes("Index already exists")) {
     throw err;
   }
+
+  console.log("⚠️ userIdIdx already exists");
 }
+
+console.log("🔥 Redis initialization finished");
 
 export { redisClient };
