@@ -1,6 +1,10 @@
 import { rm } from "fs/promises";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
+import {
+  directorySchema,
+  directorySchemaRename,
+} from "../schemas/directory.schema.js";
 
 // Read
 export const getDirectory = async (req, res, next) => {
@@ -41,7 +45,7 @@ export const createDirectory = async (req, res, next) => {
   const user = req.user;
 
   const parentDirId = req.params.id ? req.params.id : user.rootDirId.toString();
-  const dirname = req.body.dirname || "New Folder";
+  const { dirname } = directorySchema.parse(req.body);
 
   try {
     const parentDir = await Directory.findOne({
@@ -78,7 +82,7 @@ export const updateDirectory = async (req, res, next) => {
   if (!id) {
     return res.status(400).json({ message: "Directory ID is required!" });
   }
-  const { newDirName } = req.body;
+  const { newDirName } = directorySchemaRename.parse(req.body);
 
   try {
     await Directory.findOneAndUpdate(

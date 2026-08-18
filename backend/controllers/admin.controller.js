@@ -12,8 +12,6 @@ export const getAllUsers = async (req, res, next) => {
 
     const searchResult = await redisClient.ft.search("userIdIdx", "*");
 
-    console.log(searchResult);
-
     const loggedInUsers = new Set(
       searchResult.documents.map((doc) => doc.value.userId),
     );
@@ -38,6 +36,12 @@ export const getAllUsers = async (req, res, next) => {
 export const logoutById = async (req, res, next) => {
   try {
     const { userId } = req.body;
+
+    if (!isValidId(userId)) {
+      return res.status(400).json({
+        message: "Invalid user ID",
+      });
+    }
 
     if (userId === req.user.id) {
       return res.status(400).json({
@@ -76,6 +80,12 @@ export const logoutById = async (req, res, next) => {
 export const deleteUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
+
+    if (!isValidId(userId)) {
+      return res.status(400).json({
+        message: "Invalid user ID",
+      });
+    }
 
     if (userId === req.user.id.toString()) {
       return res.status(400).json({

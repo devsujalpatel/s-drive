@@ -3,18 +3,17 @@ import { rm } from "fs/promises";
 import path from "path";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
+import { fileName } from "../schemas/file.schema.js";
 
 // Create
 export const uploadFile = async (req, res, next) => {
   try {
     const user = req.user;
     if (user.deleted) {
-      return res
-        .status(401)
-        .json({
-          error:
-            "Your account has been deleted. Please contact support if you need assistance.",
-        });
+      return res.status(401).json({
+        error:
+          "Your account has been deleted. Please contact support if you need assistance.",
+      });
     }
     const parentDirId = req.params.id
       ? req.params.id
@@ -96,6 +95,8 @@ export const updateFile = async (req, res, next) => {
   const { id } = req.params;
   const user = req.user;
 
+  const { newFileName } = fileName.parse(req.body);
+
   try {
     const file = await File.findOne({
       _id: String(id),
@@ -105,7 +106,7 @@ export const updateFile = async (req, res, next) => {
     if (!file) {
       return res.status(404).json({ error: "File not found!" });
     }
-    file.name = req.body.newFilename || file.name;
+    file.name = newFileName || file.name;
     await file.save();
     return res.status(200).json({ message: "Renamed" });
   } catch (err) {
