@@ -292,7 +292,6 @@ function DirectoryView() {
     setErrorMessage("");
     try {
       await api.delete(`/directory/${id}`);
-      await handleFetchErrors(response);
       getDirectoryItems();
     } catch (error) {
       setErrorMessage(error.message);

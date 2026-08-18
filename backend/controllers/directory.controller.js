@@ -14,6 +14,7 @@ export const getDirectory = async (req, res, next) => {
 
     const directoryData = await Directory.findOne({
       _id,
+      userId: user._id,
     }).lean();
 
     if (!directoryData) {

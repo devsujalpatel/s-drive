@@ -1,12 +1,32 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import directoryRoutes from "./routes/directory.routes.js";
+import { rateLimit } from "express-rate-limit";
+import helmet from "helmet";
 import "dotenv/config";
+import { throttle } from "./lib/throttle.js";
 
 export const app = express();
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  ipv6Subnet: 56,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(express.json());
+app.use(helmet());
+app.use(throttle());
+app.use(globalLimiter);
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -15,6 +35,7 @@ app.use(
 );
 
 // routes
+import directoryRoutes from "./routes/directory.routes.js";
 import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -23,12 +44,11 @@ import ownerRoutes from "./routes/owner.routes.js";
 
 // middlewares
 import { checkAuth, checkDeleted } from "./middlewares/auth.middleware.js";
-import { resourceLimits } from "worker_threads";
 
 app.use("/directory", checkAuth, checkDeleted, directoryRoutes);
 app.use("/file", checkAuth, checkDeleted, fileRoutes);
 app.use("/user", userRoutes);
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter, authRoutes);
 app.use("/admin", adminRoutes);
 app.use("/owner", ownerRoutes);
 
