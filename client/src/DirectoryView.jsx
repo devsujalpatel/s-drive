@@ -166,7 +166,7 @@ function DirectoryView() {
   /**
    * Upload items in queue one by one
    */
-  async function processUploadQueue(queue) {
+  function processUploadQueue(queue) {
     if (queue.length === 0) {
       setIsUploading(false);
       setUploadQueue([]);
@@ -178,62 +178,81 @@ function DirectoryView() {
       return;
     }
 
+    // Take first item
     const [currentItem, ...restQueue] = queue;
 
+    // Mark as uploading
     setFilesList((prev) =>
-      prev.map((file) =>
-        file.id === currentItem.id ? { ...file, isUploading: true } : file,
+      prev.map((f) =>
+        f.id === currentItem.id ? { ...f, isUploading: true } : f,
       ),
     );
 
-    try {
-      const response = await api.post(
-        `/file/${dirId || ""}`,
-        currentItem.file,
-        {
-          headers: {
-            filename: currentItem.name,
-          },
+    // Create XHR
+    const xhr = new XMLHttpRequest();
 
-          onUploadProgress: (event) => {
-            if (event.total) {
-              const progress = (event.loaded / event.total) * 100;
+    xhr.open("POST", `${BASE_URL}/file/${dirId || ""}`, true);
 
-              setProgressMap((prev) => ({
-                ...prev,
-                [currentItem.id]: progress,
-              }));
-            }
-          },
+    // Send cookies
+    xhr.withCredentials = true;
 
-          // Allows cancellation with AbortController
-          signal: currentItem.controller?.signal,
-        },
-      );
+    // Send filename
+    xhr.setRequestHeader("filename", currentItem.name);
 
-      console.log("Upload successful:", response.data);
-    } catch (error) {
-      if (error.code === "ERR_CANCELED") {
-        console.log(`Upload cancelled: ${currentItem.name}`);
-      } else {
-        console.error(
-          `Upload failed: ${currentItem.name}`,
-          error.response?.data || error.message,
-        );
+    // Upload progress
+    xhr.upload.addEventListener("progress", (evt) => {
+      if (evt.lengthComputable) {
+        const progress = (evt.loaded / evt.total) * 100;
+
+        setProgressMap((prev) => ({
+          ...prev,
+          [currentItem.id]: progress,
+        }));
       }
-    } finally {
-      // Move to next item
+    });
+
+    // Upload completed
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        console.log(`Uploaded ${currentItem.name} successfully`);
+      } else {
+        console.error(`Upload failed: ${xhr.status}`, xhr.responseText);
+      }
+
+      // Continue queue
       processUploadQueue(restQueue);
-    }
+    });
+
+    // Upload failed
+    xhr.addEventListener("error", () => {
+      console.error(`Upload failed: ${currentItem.name}`);
+
+      // Continue queue
+      processUploadQueue(restQueue);
+    });
+
+    // Upload cancelled
+    xhr.addEventListener("abort", () => {
+      console.log(`Upload cancelled: ${currentItem.name}`);
+    });
+
+    // Store XHR so it can be cancelled
+    setUploadXhrMap((prev) => ({
+      ...prev,
+      [currentItem.id]: xhr,
+    }));
+
+    // Send the actual File/Blob
+    xhr.send(currentItem.file);
   }
   /**
    * Cancel an in-progress upload
    */
   function handleCancelUpload(tempId) {
-    const controller = uploadControllerMap[tempId];
+    const xhr = uploadXhrMap[tempId];
 
-    if (controller) {
-      controller.abort();
+    if (xhr) {
+      xhr.abort();
     }
 
     // Remove from queue
@@ -242,14 +261,14 @@ function DirectoryView() {
     // Remove from files list
     setFilesList((prev) => prev.filter((file) => file.id !== tempId));
 
-    // Remove from progress map
+    // Remove progress
     setProgressMap((prev) => {
       const { [tempId]: _, ...rest } = prev;
       return rest;
     });
 
-    // Remove controller
-    setUploadControllerMap((prev) => {
+    // Remove XHR reference
+    setUploadXhrMap((prev) => {
       const copy = { ...prev };
       delete copy[tempId];
       return copy;
@@ -263,7 +282,6 @@ function DirectoryView() {
     setErrorMessage("");
     try {
       await api.delete(`/file/${id}`);
-      await handleFetchErrors(response);
       getDirectoryItems();
     } catch (error) {
       setErrorMessage(error.message);

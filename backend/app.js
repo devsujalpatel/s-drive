@@ -17,13 +17,13 @@ app.use(
 // routes
 import fileRoutes from "./routes/file.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import authRoutes from "./routes/auth.routes.js"
+import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import ownerRoutes from "./routes/owner.routes.js";
 
-
 // middlewares
 import { checkAuth, checkDeleted } from "./middlewares/auth.middleware.js";
+import { resourceLimits } from "worker_threads";
 
 app.use("/directory", checkAuth, checkDeleted, directoryRoutes);
 app.use("/file", checkAuth, checkDeleted, fileRoutes);
