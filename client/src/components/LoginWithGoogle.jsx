@@ -1,6 +1,7 @@
 import { loginWithGoogle } from "../apis/loginWithGoogle";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
+import { showErrorToast } from "../lib/errorToast";
 
 export const LoginWithGoogle = () => {
   const navigate = useNavigate();
@@ -14,18 +15,25 @@ export const LoginWithGoogle = () => {
       <div className="flex justify-center">
         <GoogleLogin
           onSuccess={async (credentialResponse) => {
-            const data = await loginWithGoogle(
-              credentialResponse.credential
-            );
+            try {
+              const data = await loginWithGoogle(credentialResponse.credential);
 
-            if (data.error) {
-              console.error(data.error);
-              return;
+              if (data.error) {
+                showErrorToast({ message: data.error }, "Google login failed");
+                return;
+              }
+
+              navigate("/");
+            } catch (error) {
+              showErrorToast(error, "Google login failed");
             }
-
-            navigate("/");
           }}
-          onError={() => console.error("Login Failed")}
+          onError={() =>
+            showErrorToast(
+              { message: "Unable to authenticate with Google." },
+              "Google login failed",
+            )
+          }
           width="320"
           theme="filled_blue"
           shape="pill"

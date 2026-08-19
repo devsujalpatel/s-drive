@@ -3,6 +3,7 @@ import "./UsersPage.css";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "./lib/axios";
+import { showErrorToast } from "./lib/errorToast";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -29,10 +30,7 @@ export default function UsersPage() {
         ),
       );
     } catch (error) {
-      console.error(
-        "Error logging out:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to log out user");
     }
   };
   const deleteUser = async (userId) => {
@@ -40,10 +38,7 @@ export default function UsersPage() {
       await api.delete(`/admin/users/${userId}`);
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
-      console.error(
-        "Error Deleting user:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to delete user");
     }
   };
   const hardDeleteUser = async (userId) => {
@@ -51,10 +46,7 @@ export default function UsersPage() {
       await api.delete(`/owner/users/${userId}/hard`);
       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
     } catch (error) {
-      console.error(
-        "Error Hard Deleting user:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to permanently delete user");
     }
   };
   const recoverUser = async (userId) => {
@@ -62,10 +54,7 @@ export default function UsersPage() {
       await api.post(`/owner/users/${userId}/recover`);
       fetchAllUsers();
     } catch (error) {
-      console.error(
-        "Error Recovering user:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to recover user");
     }
   };
 
@@ -77,10 +66,7 @@ export default function UsersPage() {
 
       setUsers(data);
     } catch (error) {
-      console.error(
-        "Error fetching users:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to fetch users");
     } finally {
       setIsLoading(false);
     }
@@ -102,10 +88,7 @@ export default function UsersPage() {
         return;
       }
 
-      console.error(
-        "Error fetching user info:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to fetch user info");
     }
   };
 

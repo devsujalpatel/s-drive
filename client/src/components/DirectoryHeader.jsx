@@ -9,6 +9,7 @@ import {
   FaGoogleDrive,
 } from "react-icons/fa";
 import api from "../lib/axios";
+import { showErrorToast } from "../lib/errorToast";
 
 function DirectoryHeader({
   directoryName,
@@ -53,12 +54,9 @@ function DirectoryHeader({
         return null;
       }
 
-      console.error(
-        "Error fetching user info:",
-        error.response?.data || error.message,
-      );
+      showErrorToast(error, "Failed to fetch user info");
 
-      throw error;
+      return null;
     }
   }
 
@@ -87,7 +85,7 @@ function DirectoryHeader({
 
       navigate("/login");
     } catch (error) {
-      console.error("Logout error:", error.response?.data || error.message);
+      showErrorToast(error, "Failed to log out");
     } finally {
       setShowUserMenu(false);
     }
@@ -103,8 +101,8 @@ function DirectoryHeader({
       setProfile(null);
 
       navigate("/login");
-    } catch (err) {
-      console.error("Logout error:", err);
+    } catch (error) {
+      showErrorToast(error, "Failed to log out from all devices");
     } finally {
       setShowUserMenu(false);
     }

@@ -1,14 +1,18 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import DirectoryHeader from "./components/DirectoryHeader";
 import CreateDirectoryModal from "./components/CreateDirectoryModal";
 import RenameModal from "./components/RenameModal";
 import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
 import api from "./lib/axios";
+import { getErrorMessage, showErrorToast } from "./lib/errorToast";
+import { DetailsPopup } from "./components/DetailsPopup";
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
+  const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
   const { dirId } = useParams();
   const navigate = useNavigate();
 
@@ -42,6 +46,9 @@ function DirectoryView() {
   const [activeContextMenu, setActiveContextMenu] = useState(null);
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
 
+  const [showDetailsPopup, setShowDetailsPopup] = useState(false);
+  const [detailsItem, setDetailsItem] = useState(null);
+
   /**
    * Fetch directory contents
    */
@@ -62,11 +69,15 @@ function DirectoryView() {
         return;
       }
 
-      setErrorMessage(
-        error.response?.data?.error ||
-          error.message ||
-          "Failed to fetch directory contents",
+      const message = getErrorMessage(
+        error,
+        "Failed to fetch directory contents",
       );
+      setErrorMessage(message);
+
+      if (message !== "Directory not found or you do not have access to it!") {
+        showErrorToast(error, "Failed to fetch directory contents");
+      }
     }
   }
 
@@ -130,12 +141,41 @@ function DirectoryView() {
     const selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
 
+    const oversizedFiles = selectedFiles.filter(
+      (file) => file.size > MAX_FILE_SIZE_BYTES,
+    );
+    const validFiles = selectedFiles.filter(
+      (file) => file.size <= MAX_FILE_SIZE_BYTES,
+    );
+
+    if (oversizedFiles.length > 0) {
+      const rejectedNames = oversizedFiles.map((file) => file.name).join(", ");
+
+      toast.error(
+        `${oversizedFiles.length} ${
+          oversizedFiles.length === 1 ? "file is" : "files are"
+        } too large`,
+        {
+          description: `Maximum file size is 50 MB. Rejected: ${rejectedNames}`,
+          duration: 6000,
+        },
+      );
+    }
+
+    setErrorMessage("");
+
+    // Clear file input so the same file can be chosen again if needed
+    e.target.value = "";
+
+    if (validFiles.length === 0) return;
+
     // Build a list of "temp" items
-    const newItems = selectedFiles.map((file) => {
+    const newItems = validFiles.map((file) => {
       const tempId = `temp-${Date.now()}-${Math.random()}`;
       return {
         file,
         name: file.name,
+        size: file.size,
         id: tempId,
         isUploading: false,
       };
@@ -151,9 +191,6 @@ function DirectoryView() {
 
     // Add them to the uploadQueue
     setUploadQueue((prev) => [...prev, ...newItems]);
-
-    // Clear file input so the same file can be chosen again if needed
-    e.target.value = "";
 
     // Start uploading queue if not already uploading
     if (!isUploading) {
@@ -198,6 +235,7 @@ function DirectoryView() {
 
     // Send filename
     xhr.setRequestHeader("filename", currentItem.name);
+    xhr.setRequestHeader("filesize", currentItem.size);
 
     // Upload progress
     xhr.upload.addEventListener("progress", (evt) => {
@@ -213,10 +251,14 @@ function DirectoryView() {
 
     // Upload completed
     xhr.addEventListener("load", () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        console.log(`Uploaded ${currentItem.name} successfully`);
-      } else {
-        console.error(`Upload failed: ${xhr.status}`, xhr.responseText);
+      if (xhr.status < 200 || xhr.status >= 300) {
+        showErrorToast(
+          {
+            message:
+              xhr.responseText || `Upload failed with status ${xhr.status}`,
+          },
+          `Failed to upload ${currentItem.name}`,
+        );
       }
 
       // Continue queue
@@ -225,7 +267,10 @@ function DirectoryView() {
 
     // Upload failed
     xhr.addEventListener("error", () => {
-      console.error(`Upload failed: ${currentItem.name}`);
+      showErrorToast(
+        { message: "Please check your connection and try again." },
+        `Failed to upload ${currentItem.name}`,
+      );
 
       // Continue queue
       processUploadQueue(restQueue);
@@ -233,7 +278,9 @@ function DirectoryView() {
 
     // Upload cancelled
     xhr.addEventListener("abort", () => {
-      console.log(`Upload cancelled: ${currentItem.name}`);
+      toast.info("Upload cancelled", {
+        description: currentItem.name,
+      });
     });
 
     // Store XHR so it can be cancelled
@@ -284,7 +331,7 @@ function DirectoryView() {
       await api.delete(`/file/${id}`);
       getDirectoryItems();
     } catch (error) {
-      setErrorMessage(error.message);
+      showErrorToast(error, "Failed to delete file");
     }
   }
 
@@ -294,7 +341,7 @@ function DirectoryView() {
       await api.delete(`/directory/${id}`);
       getDirectoryItems();
     } catch (error) {
-      setErrorMessage(error.message);
+      showErrorToast(error, "Failed to delete folder");
     }
   }
 
@@ -315,12 +362,7 @@ function DirectoryView() {
 
       await getDirectoryItems();
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.error ||
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to create directory",
-      );
+      showErrorToast(error, "Failed to create folder");
     }
   }
 
@@ -344,7 +386,7 @@ function DirectoryView() {
 
       const payload =
         renameType === "file"
-          ? { newFilename: renameValue }
+          ? { newFileName: renameValue }
           : { newDirName: renameValue };
 
       await api.patch(url, payload);
@@ -356,12 +398,7 @@ function DirectoryView() {
 
       await getDirectoryItems();
     } catch (error) {
-      setErrorMessage(
-        error.response?.data?.error ||
-          error.response?.data?.message ||
-          error.message ||
-          "Failed to rename",
-      );
+      showErrorToast(error, "Failed to rename");
     }
   }
 
@@ -382,6 +419,17 @@ function DirectoryView() {
     }
   }
 
+  function openDetailsPopup(item) {
+    setDetailsItem(item);
+    setShowDetailsPopup(true);
+    setActiveContextMenu(null);
+  }
+
+  function closeDetailsPopup() {
+    setShowDetailsPopup(false);
+    setDetailsItem(null);
+  }
+
   useEffect(() => {
     function handleDocumentClick() {
       setActiveContextMenu(null);
@@ -398,13 +446,6 @@ function DirectoryView() {
 
   return (
     <div className="directory-view">
-      {/* Top error message for general errors */}
-      {errorMessage &&
-        errorMessage !==
-          "Directory not found or you do not have access to it!" && (
-          <div className="error-message">{errorMessage}</div>
-        )}
-
       <DirectoryHeader
         directoryName={directoryName}
         onCreateFolderClick={() => setShowCreateDirModal(true)}
@@ -439,6 +480,11 @@ function DirectoryView() {
         />
       )}
 
+      {/* Details Popup */}
+      {showDetailsPopup && (
+        <DetailsPopup item={detailsItem} onClose={closeDetailsPopup} />
+      )}
+
       {combinedItems.length === 0 ? (
         // Check if the error is specifically the "no access" error
         errorMessage ===
@@ -466,6 +512,7 @@ function DirectoryView() {
           handleDeleteFile={handleDeleteFile}
           handleDeleteDirectory={handleDeleteDirectory}
           openRenameModal={openRenameModal}
+          onOpenDetails={openDetailsPopup}
           BASE_URL={BASE_URL}
         />
       )}
