@@ -9,6 +9,13 @@ import {
 } from "react-icons/fa";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import ContextMenu from "../components/ContextMenu";
+import { formatBytes } from "../lib/formatBytes";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 function DirectoryItem({
   item,
@@ -50,6 +57,9 @@ function DirectoryItem({
   }
 
   const isUploadingItem = item.id.startsWith("temp-");
+  const itemSize = item.isDirectory ? (item.totalSize ?? item.size) : item.size;
+  const tooltipLabel = item.isDirectory ? "Folder size" : "File size";
+  const formattedSize = formatBytes(itemSize);
 
   return (
     <div
@@ -82,9 +92,18 @@ function DirectoryItem({
           <div className="min-w-0">
             <p className="truncate font-medium text-neutral-900">{item.name}</p>
 
-            <p className="text-sm text-neutral-500">
-              {item.isDirectory ? "Folder" : "File"}
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="w-fit text-sm text-neutral-500">
+                    {item.isDirectory ? "Folder" : "File"}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  {tooltipLabel}: {formattedSize}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 

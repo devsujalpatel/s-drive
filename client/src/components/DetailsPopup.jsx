@@ -1,21 +1,6 @@
 import { useEffect } from "react";
 import { FaFileAlt, FaFolder, FaTimes } from "react-icons/fa";
-
-function formatBytes(bytes) {
-  const value = Number(bytes);
-
-  if (!Number.isFinite(value) || value < 0) return "Not available";
-  if (value === 0) return "0 B";
-
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  const unitIndex = Math.min(
-    Math.floor(Math.log(value) / Math.log(1024)),
-    units.length - 1,
-  );
-  const size = value / 1024 ** unitIndex;
-
-  return `${size.toFixed(size >= 10 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-}
+import { formatBytes } from "../lib/formatBytes";
 
 function formatDate(date) {
   if (!date) return "Not available";
@@ -55,7 +40,7 @@ export function DetailsPopup({ item, onClose }) {
   if (!item) return null;
 
   const type = item.isDirectory ? "Folder" : "File";
-  const itemId = item.id || item._id;
+  const sizeLabel = item.isDirectory ? "Total size" : "Size";
 
   return (
     <div
@@ -104,7 +89,7 @@ export function DetailsPopup({ item, onClose }) {
           <DetailRow label="Name" value={item.name} />
           <DetailRow label="Type" value={type} />
 
-          <DetailRow label="Size" value={formatBytes(item.size || 0)} />
+          <DetailRow label={sizeLabel} value={formatBytes(item.size)} />
           {!item.isDirectory && (
             <DetailRow
               label="Extension"

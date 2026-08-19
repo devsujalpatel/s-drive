@@ -18,6 +18,7 @@ function DirectoryView() {
 
   // Displayed directory name
   const [directoryName, setDirectoryName] = useState("My Drive");
+  const [directorySize, setDirectorySize] = useState(0);
 
   // Lists of items
   const [directoriesList, setDirectoriesList] = useState([]);
@@ -59,6 +60,7 @@ function DirectoryView() {
       const { data } = await api.get(`/directory/${dirId || ""}`);
 
       setDirectoryName(dirId ? data.name : "My Drive");
+      setDirectorySize(data.size);
 
       // New items on top
       setDirectoriesList([...data.directories].reverse());

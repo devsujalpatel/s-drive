@@ -5,6 +5,7 @@ import {
   directorySchema,
   directorySchemaRename,
 } from "../schemas/directory.schema.js";
+import { updateDirectorySize } from "./file.controller.js";
 
 // Read
 export const getDirectory = async (req, res, next) => {
@@ -102,17 +103,12 @@ export const deleteDirectory = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const directory = await Directory.findOne(
-      {
-        _id: String(id),
-        userId: user._id,
-      },
-      {
-        _id: 1,
-      },
-    ).lean();
+    const directoryData = await Directory.findOne({
+      _id: String(id),
+      userId: user._id,
+    });
 
-    if (!directory) {
+    if (!directoryData) {
       return res.status(404).json({
         message: "Directory not found or you do not have access to it!",
       });
@@ -149,6 +145,8 @@ export const deleteDirectory = async (req, res, next) => {
     await Directory.deleteMany({
       _id: { $in: [...directories.map(({ _id }) => _id), String(id)] },
     });
+
+    await updateDirectorySize(directoryData.parentDirId, -directoryData.size);
 
     res.status(200).json({ message: "Directory Deleted!" });
   } catch (err) {

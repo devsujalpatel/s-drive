@@ -9,7 +9,9 @@ const directorySchema = new Schema(
       default: null,
       ref: "Directory",
     },
+    size: { type: Number, default: 0 },
   },
+  { timestamps: true },
   { strict: "throw" },
 );
 

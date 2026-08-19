@@ -38,6 +38,7 @@ const userSchema = new Schema(
       default: false
     }
   },
+  {timestamps: true},
   { strict: "throw" },
 );
 

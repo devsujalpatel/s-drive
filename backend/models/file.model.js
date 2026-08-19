@@ -4,6 +4,7 @@ const fileSchema = new Schema(
   {
     extension: { type: String, required: true },
     name: { type: String, required: true },
+    size: { type: Number, required: true },
     parentDirId: {
       type: Schema.Types.ObjectId,
       required: true,
@@ -11,6 +12,7 @@ const fileSchema = new Schema(
     },
     userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
   },
+  { timestamps: true},
   { strict: "throw" },
 );
 

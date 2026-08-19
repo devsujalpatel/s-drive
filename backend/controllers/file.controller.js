@@ -5,6 +5,18 @@ import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 import { fileName } from "../schemas/file.schema.js";
 
+const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+export async function updateDirectorySize(parentId, deltaSize) {
+  while (parentId) {
+    const dir = await Directory.findById(parentId);
+    if (!dir) break;
+    dir.size += deltaSize;
+    await dir.save();
+    parentId = dir.parentDirId;
+  }
+}
+
 // Create
 export const uploadFile = async (req, res, next) => {
   try {
@@ -30,22 +42,46 @@ export const uploadFile = async (req, res, next) => {
     }
 
     const filename = req.headers.filename || "untitled";
+    const filesize = req.headers.filesize;
+
+    if (filesize > MAX_FILE_SIZE) {
+      res.header("Connection", "close");
+      return res.destroy();
+    }
+
     const extension = path.extname(filename);
 
     const insertedFile = await File.create({
       extension,
       name: filename,
+      size: filesize,
       parentDirId,
       userId: req.user._id,
     });
 
     const fileId = insertedFile._id.toString();
     const fullFileName = `${fileId}${extension}`;
+    const filePath = `./storage/${fullFileName}`;
 
-    const writeStream = createWriteStream(`./storage/${fullFileName}`);
-    req.pipe(writeStream);
+    const writeStream = createWriteStream(filePath);
 
-    req.on("end", () => {
+    let totalFileSize = 0;
+    let aborted = false;
+
+    req.on("data", async (chunk) => {
+      if (aborted) return;
+      totalFileSize += chunk.length;
+      if (totalFileSize > filesize) {
+        aborted = true;
+        writeStream.close();
+        insertedFile.deleteOne();
+        await rm(filePath);
+        return req.destroy();
+      }
+      writeStream.write(chunk);
+    });
+    req.on("end", async () => {
+      await updateDirectorySize(parentDirId, totalFileSize);
       return res.status(201).json({ message: "File Uploaded" });
     });
 
@@ -124,7 +160,7 @@ export const deleteFile = async (req, res, next) => {
     const file = await File.findOne({
       _id: String(id),
       userId: String(user._id),
-    }).select("extension");
+    })
 
     if (!file) {
       return res.status(404).json({ error: "File not found!" });
@@ -132,6 +168,7 @@ export const deleteFile = async (req, res, next) => {
 
     await rm(`./storage/${id}${file.extension}`, { recursive: true });
     await file.deleteOne();
+    await updateDirectorySize(file.parentDirId, -file.size);
 
     return res.status(200).json({ message: "File Deleted Successfully" });
   } catch (err) {

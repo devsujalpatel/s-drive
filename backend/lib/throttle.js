@@ -2,7 +2,7 @@ const throttleData = new Map();
 
 export function throttle({
   windowMs = 60 * 1000,
-  delayAfter = 10,
+  delayAfter = 20,
   delayMs = 100,
   maxRequests = 50,
 } = {}) {
