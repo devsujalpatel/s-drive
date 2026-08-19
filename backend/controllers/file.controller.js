@@ -35,6 +35,10 @@ export const uploadFile = async (req, res, next) => {
       _id: parentDirId,
       userId: req.user._id,
     });
+    const rootDir = await Directory.findOne({
+      _id: user.rootDirId,
+      userId: req.user._id,
+    });
 
     // Check if parent directory exists
     if (!parentDirData) {
@@ -45,6 +49,13 @@ export const uploadFile = async (req, res, next) => {
     const filesize = req.headers.filesize;
 
     if (filesize > MAX_FILE_SIZE) {
+      res.header("Connection", "close");
+      return res.destroy();
+    }
+
+    const availableSpace = user.maxStorageInBytes - rootDir.size;
+
+    if (filesize > availableSpace) {
       res.header("Connection", "close");
       return res.destroy();
     }
@@ -69,7 +80,6 @@ export const uploadFile = async (req, res, next) => {
     let aborted = false;
 
     req.on("data", async (chunk) => {
-      if (aborted) return;
       totalFileSize += chunk.length;
       if (totalFileSize > filesize) {
         aborted = true;
@@ -160,7 +170,7 @@ export const deleteFile = async (req, res, next) => {
     const file = await File.findOne({
       _id: String(id),
       userId: String(user._id),
-    })
+    });
 
     if (!file) {
       return res.status(404).json({ error: "File not found!" });

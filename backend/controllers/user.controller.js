@@ -1,13 +1,17 @@
+import Directory from "../models/directory.model.js";
 import { deleteSessionService, deleteSessionServiceByUserId } from "../services/sessionService.js"
 
 // Get User
-export const getUser = (req, res) => {
+export const getUser = async (req, res) => {
+  const rootDir = await Directory.findById(req.user.rootDirId).lean();
   res.status(200).json({
     id: req.user._id,
     name: req.user.name,
     email: req.user.email,
     profile: req.user.picture,
     role: req.user.role,
+    maxStorageInBytes: req.user.maxStorageInBytes,
+    usedStorageInBytes: rootDir.size,
   });
 };
 

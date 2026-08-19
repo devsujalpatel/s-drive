@@ -10,6 +10,8 @@ import {
 } from "react-icons/fa";
 import api from "../lib/axios";
 import { showErrorToast } from "../lib/errorToast";
+import useStorageStore from "../store/useStorageStore";
+
 
 function DirectoryHeader({
   directoryName,
@@ -26,9 +28,16 @@ function DirectoryHeader({
   const [userName, setUserName] = useState("Guest User");
   const [userEmail, setUserEmail] = useState("guest@example.com");
   const [profile, setProfile] = useState(null);
+  const [maxStorageInBytes, setMaxStorageInBytes] = useState(2 * 1024 ** 3);
+  const [usedStorageInBytes, setUsedStorageInBytes] = useState(0);
+
+  const usedGB = Number((usedStorageInBytes / 1024 ** 3).toFixed(2));
+  const totalGB = Number((maxStorageInBytes / 1024 ** 3).toFixed(2));
 
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
+  const { setAvailableSpace } = useStorageStore();
+  
 
   // -------------------------------------------
   // 1. Fetch user info from /user on mount
@@ -41,6 +50,9 @@ function DirectoryHeader({
       setUserName(data.name);
       setUserEmail(data.email);
       setProfile(data.profile);
+      setMaxStorageInBytes(data.maxStorageInBytes);
+      setUsedStorageInBytes(data.usedStorageInBytes);
+      setAvailableSpace(data.maxStorageInBytes - data.usedStorageInBytes);
       setLoggedIn(true);
 
       return data;
@@ -184,18 +196,27 @@ function DirectoryHeader({
               {loggedIn ? (
                 <>
                   <div className="absolute right-0 top-14 w-72 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
-                    <div className="flex items-center gap-3 border-b p-4">
+                    <div className="flex items-center gap-3 border-b border-neutral-300 p-4">
                       <img
                         src={profile}
                         className="h-12 w-12 rounded-full object-cover"
                       />
-
                       <div>
                         <p className="font-medium">{userName}</p>
                         <p className="text-sm text-neutral-500">{userEmail}</p>
                       </div>
                     </div>
-
+                    <div className="px-4 pt-4 py-2 flex items-start gap-2 justify-start flex-col">
+                      <div className="w-full bg-neutral-200 rounded-full">
+                        <div
+                          className="bg-blue-500 rounded-full h-2"
+                          style={{ width: `${(usedGB / totalGB) * 100}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-sm text-neutral-600 ml-0.5">
+                        {usedGB} GB of {totalGB} GB used
+                      </p>
+                    </div>
                     <button
                       onClick={handleLogout}
                       className="flex cursor-pointer w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-100"

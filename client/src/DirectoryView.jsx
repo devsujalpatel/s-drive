@@ -9,16 +9,16 @@ import "./DirectoryView.css";
 import api from "./lib/axios";
 import { getErrorMessage, showErrorToast } from "./lib/errorToast";
 import { DetailsPopup } from "./components/DetailsPopup";
+import useStorageStore from "./store/useStorageStore";
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
-  const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+  const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024;
   const { dirId } = useParams();
   const navigate = useNavigate();
 
   // Displayed directory name
   const [directoryName, setDirectoryName] = useState("My Drive");
-  const [directorySize, setDirectorySize] = useState(0);
 
   // Lists of items
   const [directoriesList, setDirectoriesList] = useState([]);
@@ -50,6 +50,8 @@ function DirectoryView() {
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
 
+  const { availableSpace } = useStorageStore();
+
   /**
    * Fetch directory contents
    */
@@ -60,7 +62,6 @@ function DirectoryView() {
       const { data } = await api.get(`/directory/${dirId || ""}`);
 
       setDirectoryName(dirId ? data.name : "My Drive");
-      setDirectorySize(data.size);
 
       // New items on top
       setDirectoriesList([...data.directories].reverse());
@@ -142,6 +143,11 @@ function DirectoryView() {
   function handleFileSelect(e) {
     const selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
+
+    if (selectedFiles.some((file) => file.size > availableSpace)) {
+      toast.error(`Not enough space to upload this big file`);
+      return;
+    }
 
     const oversizedFiles = selectedFiles.filter(
       (file) => file.size > MAX_FILE_SIZE_BYTES,
