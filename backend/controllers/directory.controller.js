@@ -11,6 +11,7 @@ import { updateDirectorySize } from "./file.controller.js";
 export const getDirectory = async (req, res, next) => {
   try {
     const user = req.user;
+
     const _id = req.params.id ? req.params.id : user.rootDirId.toString();
 
     const directoryData = await Directory.findOne({
@@ -26,22 +27,56 @@ export const getDirectory = async (req, res, next) => {
 
     const directories = await Directory.find({
       parentDirId: directoryData._id,
+      userId: user._id,
     }).lean();
 
     const files = await File.find({
       parentDirId: directoryData._id,
+      userId: user._id,
     }).lean();
+
+    // IDs of all ancestors + current directory
+    const pathIds = [...directoryData.path, directoryData._id];
+
+    // Fetch breadcrumb directories
+    const pathDirectories = await Directory.find({
+      _id: { $in: pathIds },
+      userId: user._id,
+    })
+      .select("_id name")
+      .lean();
+
+    const directoryMap = new Map(
+      pathDirectories.map((dir) => [dir._id.toString(), dir]),
+    );
+
+    const path = pathIds
+      .map((id) => directoryMap.get(id.toString()))
+      .filter(Boolean)
+      .map((dir) => ({
+        id: dir._id,
+        name: dir.name,
+      }));
 
     return res.status(200).json({
       ...directoryData,
-      files: files.map((file) => ({ ...file, id: file._id })),
-      directories: directories.map((dir) => ({ ...dir, id: dir._id })),
+
+      path,
+
+      files: files.map((file) => ({
+        ...file,
+        id: file._id,
+      })),
+
+      directories: directories.map((dir) => ({
+        ...dir,
+        id: dir._id,
+      })),
     });
   } catch (error) {
     next(error);
   }
 };
-
 // Create
 export const createDirectory = async (req, res, next) => {
   const user = req.user;
@@ -52,7 +87,10 @@ export const createDirectory = async (req, res, next) => {
   try {
     const parentDir = await Directory.findOne({
       _id: parentDirId,
-    }).lean();
+      userId: user._id,
+    })
+      .select("path")
+      .lean();
 
     if (!parentDir)
       return res
@@ -62,6 +100,7 @@ export const createDirectory = async (req, res, next) => {
     await Directory.create({
       name: dirname,
       parentDirId,
+      path: [...parentDir.path, parentDirId],
       userId: user._id,
     });
 

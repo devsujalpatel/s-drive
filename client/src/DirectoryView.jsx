@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import DirectoryHeader from "./components/DirectoryHeader";
 import CreateDirectoryModal from "./components/CreateDirectoryModal";
@@ -10,6 +10,7 @@ import api from "./lib/axios";
 import { getErrorMessage, showErrorToast } from "./lib/errorToast";
 import { DetailsPopup } from "./components/DetailsPopup";
 import useStorageStore from "./store/useStorageStore";
+import Breadcrumb from "./components/breadcrumb";
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -50,6 +51,9 @@ function DirectoryView() {
   const [showDetailsPopup, setShowDetailsPopup] = useState(false);
   const [detailsItem, setDetailsItem] = useState(null);
 
+  const [path, setPath] = useState([]);
+  const [userRootDirId, setUserRootDirId] = useState(null);
+
   const { availableSpace } = useStorageStore();
 
   /**
@@ -62,10 +66,12 @@ function DirectoryView() {
       const { data } = await api.get(`/directory/${dirId || ""}`);
 
       setDirectoryName(dirId ? data.name : "My Drive");
+      setPath(data.path);
 
       // New items on top
       setDirectoriesList([...data.directories].reverse());
       setFilesList([...data.files].reverse());
+      setUserRootDirId(data.path[0].id);
     } catch (error) {
       if (error.response?.status === 401) {
         navigate("/login");
@@ -466,6 +472,8 @@ function DirectoryView() {
           "Directory not found or you do not have access to it!"
         }
       />
+
+      <Breadcrumb path={path} userRootDirId={userRootDirId} />
 
       {/* Create Directory Modal */}
       {showCreateDirModal && (

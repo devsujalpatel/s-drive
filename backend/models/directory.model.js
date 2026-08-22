@@ -4,6 +4,15 @@ const directorySchema = new Schema(
   {
     name: { type: String, required: true },
     userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    path: {
+      type: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Directory",
+        },
+      ],
+      default: [],
+    },
     parentDirId: {
       type: Schema.Types.ObjectId,
       default: null,
