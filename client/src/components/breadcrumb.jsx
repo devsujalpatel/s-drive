@@ -18,7 +18,7 @@ const Breadcrumb = ({ path, userRootDirId }) => {
                   title={label}
                 >
                   {isRoot && <Home className="h-3.5 w-3.5 text-gray-500" />}
-                  <span className="max-w-[200px] truncate">{label}</span>
+                  <span className="max-w-50 truncate">{label}</span>
                 </span>
               ) : (
                 <Link
@@ -27,11 +27,13 @@ const Breadcrumb = ({ path, userRootDirId }) => {
                   className="flex items-center gap-1.5 px-2 py-1 rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
                 >
                   {isRoot && <Home className="h-3.5 w-3.5" />}
-                  <span className="max-w-[200px] truncate">{label}</span>
+                  <span className="max-w-50 truncate">{label}</span>
                 </Link>
               )}
 
-              {!isLast && <ChevronRight className="h-3.5 w-3.5 text-gray-300" />}
+              {!isLast && (
+                <ChevronRight className="h-3.5 w-3.5 text-gray-300" />
+              )}
             </li>
           );
         })}

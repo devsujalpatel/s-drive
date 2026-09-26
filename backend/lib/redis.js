@@ -1,4 +1,5 @@
 import { createClient, SCHEMA_FIELD_TYPE as SchemaFieldTypes } from "redis";
+import "dotenv/config";
 
 const redisClient = await createClient({
   url: process.env.REDIS_URL,

@@ -95,6 +95,18 @@ export const uploadFile = async (req, res, next) => {
       return res.status(201).json({ message: "File Uploaded" });
     });
 
+    req.on("close", async () => {
+      if (!fileUploadCompleted) {
+        try {
+          await insertedFile.deleteOne();
+          await rm(filePath);
+          console.log("file cleaned");
+        } catch (err) {
+          console.error("Error cleaning up aborted upload:", filePath)
+        }
+      }
+    })
+
     req.on("error", async () => {
       await File.deleteOne({ _id: insertedFile._id });
       return res.status(408).json({ message: "Could Not Upload File" });
