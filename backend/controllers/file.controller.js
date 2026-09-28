@@ -6,6 +6,7 @@ import File from "../models/file.model.js";
 import { fileName } from "../schemas/file.schema.js";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import { createUploadSignedUrl } from "../config/s3.js";
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
@@ -283,3 +284,11 @@ export const deleteFile = async (req, res, next) => {
     next(err);
   }
 };
+
+
+export const uploadInitiate = (req, res) => {
+  const url = createUploadSignedUrl({
+    
+  })
+  res.json({uploadUrl: 'testUrl'})
+}

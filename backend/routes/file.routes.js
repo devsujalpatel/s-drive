@@ -5,12 +5,16 @@ import {
   getFile,
   updateFile,
   uploadFile,
+  uploadInitiate,
 } from "../controllers/file.controller.js";
 
 const router = express.Router();
 
 router.param("id", validateId);
 router.param("parentDirId", validateId);
+
+
+router.post("/upload/initiate", uploadInitiate);
 
 // CREATE
 router.post("/:id?", uploadFile);
@@ -23,5 +27,7 @@ router.patch("/:id", updateFile);
 
 // DELETE
 router.delete("/:id", deleteFile);
+
+
 
 export default router;

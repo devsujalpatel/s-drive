@@ -38,3 +38,4 @@ export const logoutAllSessions = async (req, res, next) => {
     next(error);
   }
 };
+

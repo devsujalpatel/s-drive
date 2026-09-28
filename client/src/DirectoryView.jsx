@@ -11,6 +11,7 @@ import { getErrorMessage, showErrorToast } from "./lib/errorToast";
 import { DetailsPopup } from "./components/DetailsPopup";
 import useStorageStore from "./store/useStorageStore";
 import Breadcrumb from "./components/breadcrumb";
+import { uploadInitiate } from "./apis/fileApi";
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -149,7 +150,7 @@ function DirectoryView() {
   const uploadQueueRef = useRef([]);
   const isUploadingRef = useRef(false);
 
-function handleFileSelect(e) {
+async function handleFileSelect(e) {
   const file = e.target.files?.[0];
 
   if (!file) return;
@@ -179,6 +180,15 @@ function handleFileSelect(e) {
     id: `temp-${Date.now()}-${Math.random()}`,
     isUploading: false,
   };
+
+  const data = await uploadInitiate({
+    name: file.name,
+    size: file.size,
+    contentType: file.type,
+    parentDirId: dirId || "",
+  })
+  console.log(data);
+  return;
 
   setFilesList((prev) => [newItem, ...prev]);
 
