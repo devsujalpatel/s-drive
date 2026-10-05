@@ -43,6 +43,7 @@ function DirectoryView() {
   const [uploadQueue, setUploadQueue] = useState([]); // queued items to upload
   const [uploadXhrMap, setUploadXhrMap] = useState({}); // track XHR per item
   const [progressMap, setProgressMap] = useState({}); // track progress per item
+  const [uploadErrorMap, setUploadErrorMap] = useState({});
   const [isUploading, setIsUploading] = useState(false); // indicates if an upload is in progress
 
   // Context menu
@@ -151,172 +152,126 @@ function DirectoryView() {
   const isUploadingRef = useRef(false);
 
 async function handleFileSelect(e) {
-  const file = e.target.files?.[0];
-
-  if (!file) return;
-
-  if (file.size > availableSpace) {
-    toast.error("Not enough space to upload this file");
-    e.target.value = "";
-    return;
-  }
-
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    toast.error("File is too large", {
-      description: `Maximum file size is ${
-        MAX_FILE_SIZE_BYTES / (1024 * 1024)
-      } MB.`,
-      duration: 6000,
-    });
-
-    e.target.value = "";
-    return;
-  }
-
-  const newItem = {
-    file,
-    name: file.name,
-    size: file.size,
-    id: `temp-${Date.now()}-${Math.random()}`,
-    isUploading: false,
-  };
-
-  const data = await uploadInitiate({
-    name: file.name,
-    size: file.size,
-    contentType: file.type,
-    parentDirId: dirId || "",
-  })
-  console.log(data);
-  return;
-
-  setFilesList((prev) => [newItem, ...prev]);
-
-  uploadQueueRef.current.push(newItem);
-
-  if (!isUploadingRef.current) {
-    processUploadQueue();
-  }
-
+  const files = Array.from(e.target.files || []);
   e.target.value = "";
+
+  for (const file of files) {
+    if (file.size > availableSpace) {
+      toast.error(`Not enough space to upload ${file.name}`);
+      continue;
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`File is too large: ${file.name}`, {
+        description: `Maximum file size is ${MAX_FILE_SIZE_BYTES / (1024 * 1024)} MB.`,
+        duration: 6000,
+      });
+      continue;
+    }
+
+    const item = {
+      file,
+      name: file.name,
+      size: file.size,
+      id: `temp-${Date.now()}-${Math.random()}`,
+      isUploading: false,
+    };
+    setFilesList((prev) => [item, ...prev]);
+    uploadQueueRef.current.push(item);
+  }
+  processUploadQueue();
 }
-  /**
-   * Upload items in queue one by one
-   */
-   function cleanupUpload(id) {
+
+function cleanupUpload(id) {
   setUploadXhrMap((prev) => {
     const next = { ...prev };
     delete next[id];
     return next;
   });
-
   setProgressMap((prev) => {
     const next = { ...prev };
     delete next[id];
     return next;
   });
 }
-   function processUploadQueue() {
+
+async function processUploadQueue() {
   if (isUploadingRef.current) return;
-
   const currentItem = uploadQueueRef.current.shift();
-
   if (!currentItem) {
-    isUploadingRef.current = false;
     setIsUploading(false);
-
-    getDirectoryItems();
+    await getDirectoryItems();
     return;
   }
 
   isUploadingRef.current = true;
   setIsUploading(true);
+  setFilesList((prev) => prev.map((file) =>
+    file.id === currentItem.id ? { ...file, isUploading: true } : file
+  ));
 
-  setFilesList((prev) =>
-    prev.map((file) =>
-      file.id === currentItem.id
-        ? { ...file, isUploading: true }
-        : file
-    )
-  );
-
-  const xhr = new XMLHttpRequest();
-
-  xhr.open(
-    "POST",
-    `${BASE_URL}/file/${dirId || ""}`,
-    true
-  );
-
-  xhr.withCredentials = true;
-
-  xhr.setRequestHeader("filename", currentItem.name);
-  xhr.setRequestHeader("filesize", String(currentItem.size));
-
-  xhr.upload.addEventListener("progress", (event) => {
-    if (!event.lengthComputable) return;
-
-    const progress = (event.loaded / event.total) * 100;
-
-    setProgressMap((prev) => ({
-      ...prev,
-      [currentItem.id]: progress,
-    }));
-  });
-
-  xhr.addEventListener("load", () => {
-    if (xhr.status < 200 || xhr.status >= 300) {
-      showErrorToast(
-        {
-          message:
-            xhr.responseText ||
-            `Upload failed with status ${xhr.status}`,
-        },
-        `Failed to upload ${currentItem.name}`
-      );
-    }
-
+  const finish = () => {
     cleanupUpload(currentItem.id);
     isUploadingRef.current = false;
     setIsUploading(false);
-
     processUploadQueue();
-  });
+  };
 
-  xhr.addEventListener("error", () => {
-    showErrorToast(
-      { message: "Please check your connection and try again." },
-      `Failed to upload ${currentItem.name}`
-    );
-
-    cleanupUpload(currentItem.id);
-
-    isUploadingRef.current = false;
-    setIsUploading(false);
-
-    processUploadQueue();
-  });
-
-  xhr.addEventListener("abort", () => {
-    toast.info("Upload cancelled", {
-      description: currentItem.name,
+  try {
+    const { uploadSignedUrl, fileId } = await uploadInitiate({
+      name: currentItem.name,
+      size: currentItem.size,
+      contentType: currentItem.file.type || "application/octet-stream",
+      parentDirId: dirId || "",
     });
-
-    cleanupUpload(currentItem.id);
-
-    isUploadingRef.current = false;
-    setIsUploading(false);
-
-    processUploadQueue();
-  });
-
-  setUploadXhrMap((prev) => ({
-    ...prev,
-    [currentItem.id]: xhr,
-  }));
-
-  xhr.send(currentItem.file);
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", uploadSignedUrl);
+    xhr.setRequestHeader("Content-Type", currentItem.file.type || "application/octet-stream");
+    xhr.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) return;
+      setProgressMap((prev) => ({ ...prev, [currentItem.id]: (event.loaded / event.total) * 100 }));
+    });
+    xhr.addEventListener("load", () => {
+      if (xhr.status < 200 || xhr.status >= 300) {
+        const message = xhr.responseText || `Upload failed with status ${xhr.status}`;
+        setUploadErrorMap((prev) => ({ ...prev, [currentItem.id]: "Upload to storage failed. Try again." }));
+        showErrorToast({ message }, `Failed to upload ${currentItem.name}`);
+      } else {
+        api.post(`/file/upload/${fileId}/complete`)
+          .then(() => {
+            setFilesList((prev) => prev.filter((file) => file.id !== currentItem.id));
+            getDirectoryItems();
+          })
+          .catch((error) => {
+            setUploadErrorMap((prev) => ({ ...prev, [currentItem.id]: getErrorMessage(error, "Upload saved, but could not finalize it. Refresh the folder." ) }));
+            showErrorToast(error, `Could not finalize ${currentItem.name}`);
+          })
+          .finally(finish);
+        return;
+      }
+      finish();
+    });
+    xhr.addEventListener("error", () => {
+      setUploadErrorMap((prev) => ({ ...prev, [currentItem.id]: "Could not reach storage. Check your connection and try again." }));
+      showErrorToast({ message: "Please check your connection and try again." }, `Failed to upload ${currentItem.name}`);
+      finish();
+    });
+    xhr.addEventListener("abort", () => {
+      setFilesList((prev) => prev.filter((file) => file.id !== currentItem.id));
+      toast.info("Upload cancelled", { description: currentItem.name });
+      finish();
+    });
+    setUploadXhrMap((prev) => ({ ...prev, [currentItem.id]: xhr }));
+    xhr.send(currentItem.file);
+  } catch (error) {
+    setUploadErrorMap((prev) => ({
+      ...prev,
+      [currentItem.id]: getErrorMessage(error, "Could not start this upload. Try again."),
+    }));
+    showErrorToast(error, `Failed to start upload for ${currentItem.name}`);
+    finish();
+  }
 }
+
   /**
    * Cancel an in-progress upload
    */
@@ -528,6 +483,7 @@ function handleCancelUpload(tempId) {
           getFileIcon={getFileIcon}
           isUploading={isUploading}
           progressMap={progressMap}
+          uploadErrorMap={uploadErrorMap}
           handleCancelUpload={handleCancelUpload}
           handleDeleteFile={handleDeleteFile}
           handleDeleteDirectory={handleDeleteDirectory}

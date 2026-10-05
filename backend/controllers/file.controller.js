@@ -1,11 +1,8 @@
-import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 import { fileName } from "../schemas/file.schema.js";
-import { Transform } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import { createUploadSignedUrl } from "../config/s3.js";
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
@@ -94,7 +91,7 @@ export const uploadFile = async (req, res, next) => {
 
     const extension = path.extname(filename);
 
-    insertedFile = await File.create({
+    const insertedFile = await File.create({
       extension,
       name: filename,
       size: filesize,
@@ -106,30 +103,7 @@ export const uploadFile = async (req, res, next) => {
 
     const fullFileName = `${fileId}${extension}`;
 
-    filePath = path.join("./storage", fullFileName);
-
     let totalFileSize = 0;
-
-    const sizeLimiter = new Transform({
-      transform(chunk, encoding, callback) {
-        totalFileSize += chunk.length;
-
-        if (totalFileSize > filesize) {
-          callback(new Error("FILE_SIZE_EXCEEDED"));
-          return;
-        }
-
-        callback(null, chunk);
-      },
-    });
-
-    const writeStream = createWriteStream(filePath);
-
-    await pipeline(
-      req,
-      sizeLimiter,
-      writeStream,
-    );
 
      // * Client said the file was X bytes,
      // * but actually sent fewer bytes.
@@ -286,9 +260,160 @@ export const deleteFile = async (req, res, next) => {
 };
 
 
-export const uploadInitiate = (req, res) => {
-  const url = createUploadSignedUrl({
-    
-  })
-  res.json({uploadUrl: 'testUrl'})
+export const uploadInitiate = async (req, res, next) => {
+  let insertedFile = null;
+
+  try {
+    const user = req.user;
+
+    if (user.deleted) {
+      return res.status(401).json({
+        error:
+          "Your account has been deleted. Please contact support if you need assistance.",
+      });
+    }
+
+    const parentDirId = req.body.fileData.parentDirId
+      ? req.body.fileData.parentDirId
+      : user.rootDirId.toString();
+
+    const [parentDirData, rootDir] = await Promise.all([
+      Directory.findOne({
+        _id: parentDirId,
+        userId: user._id,
+      }),
+
+      Directory.findOne({
+        _id: user.rootDirId,
+        userId: user._id,
+      }),
+    ]);
+
+    if (!parentDirData) {
+      return res.status(404).json({
+        error: "Parent directory not found!",
+      });
+    }
+
+    if (!rootDir) {
+      return res.status(404).json({
+        error: "Root directory not found!",
+      });
+    }
+
+    const filename =
+      typeof req.body.fileData.name === "string"
+        ? req.body.fileData.name
+        : "untitled";
+
+    const filesize = Number(req.body.fileData.size);
+
+    if (!Number.isSafeInteger(filesize) || filesize < 0) {
+      return res.status(400).json({
+        error: "Invalid file size",
+      });
+    }
+
+    if (filesize > MAX_FILE_SIZE) {
+      return res.status(413).json({
+        error: "File too large",
+      });
+    }
+
+    const availableSpace = user.maxStorageInBytes - rootDir.size;
+
+    if (filesize > availableSpace) {
+      return res.status(413).json({
+        error: "Not enough storage space",
+      });
+    }
+
+    const extension = path.extname(filename);
+
+    insertedFile = await File.create({
+      extension,
+      name: filename,
+      size: filesize,
+      parentDirId,
+      userId: user._id,
+      isUploading: true,
+    });
+
+
+
+    /*
+     * Use the actual received size.
+     */
+    await File.updateOne(
+      { _id: insertedFile._id },
+      {
+        $set: {
+          size: filesize,
+        },
+      },
+    );
+
+    await updateDirectorySize(
+      parentDirId,
+      filesize,
+    );
+
+    const uploadSignedUrl = await createUploadSignedUrl({ key: `${insertedFile.id}${extension}`, contentType: req.body.fileData.contentType })
+
+    return res.status(201).json({
+      uploadSignedUrl,
+      fileId: insertedFile.id
+    });
+  } catch (error) {
+    /*
+     * Cleanup database record
+     */
+    if (insertedFile?._id) {
+      await File.deleteOne({
+        _id: insertedFile._id,
+      }).catch(() => {});
+    }
+
+
+     //  Client uploaded more than declared.
+    if (
+      error instanceof Error &&
+      error.message === "FILE_SIZE_EXCEEDED"
+    ) {
+      return res.status(413).json({
+        error: "Uploaded file exceeds declared size",
+      });
+    }
+
+     //  Client uploaded fewer bytes than declared.
+    if (
+      error instanceof Error &&
+      error.message === "FILE_SIZE_MISMATCH"
+    ) {
+      return res.status(400).json({
+        error: "Uploaded file size does not match declared size",
+      });
+    }
+
+     //  Client disconnected / request was aborted.
+    next(error);
+  }
 }
+
+export const completeUpload = async (req, res, next) => {
+  try {
+    const file = await File.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id, isUploading: true },
+      { $set: { isUploading: false } },
+      { new: true },
+    );
+
+    if (!file) {
+      return res.status(404).json({ error: "Upload not found" });
+    }
+
+    return res.status(200).json({ message: "Upload completed" });
+  } catch (error) {
+    next(error);
+  }
+};

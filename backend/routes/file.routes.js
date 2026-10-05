@@ -2,6 +2,7 @@ import express from "express";
 import validateId from "../middlewares/validated.middleware.js";
 import {
   deleteFile,
+  completeUpload,
   getFile,
   updateFile,
   uploadFile,
@@ -15,6 +16,7 @@ router.param("parentDirId", validateId);
 
 
 router.post("/upload/initiate", uploadInitiate);
+router.post("/upload/:id/complete", completeUpload);
 
 // CREATE
 router.post("/:id?", uploadFile);

@@ -11,6 +11,10 @@ const fileSchema = new Schema(
       ref: "Directory",
     },
     userId: { type: Schema.Types.ObjectId, required: true, ref: "User" },
+    isUploading: {
+      type: Schema.Types.Boolean,
+      required: true
+    }
   },
   { timestamps: true},
   { strict: "throw" },

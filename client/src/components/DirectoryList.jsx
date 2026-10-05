@@ -9,6 +9,7 @@ function DirectoryList({
   getFileIcon,
   isUploading,
   progressMap,
+  uploadErrorMap,
   handleCancelUpload,
   handleDeleteFile,
   handleDeleteDirectory,
@@ -32,6 +33,7 @@ function DirectoryList({
             getFileIcon={getFileIcon}
             isUploading={isUploading}
             uploadProgress={uploadProgress}
+            uploadError={uploadErrorMap?.[item.id]}
             handleCancelUpload={handleCancelUpload}
             handleDeleteFile={handleDeleteFile}
             handleDeleteDirectory={handleDeleteDirectory}

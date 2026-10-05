@@ -26,6 +26,7 @@ function DirectoryItem({
   getFileIcon,
   isUploading,
   uploadProgress,
+  uploadError,
   handleCancelUpload,
   handleDeleteFile,
   handleDeleteDirectory,
@@ -120,7 +121,7 @@ function DirectoryItem({
       </div>
 
       {/* Upload Progress */}
-      {isUploadingItem && (
+      {isUploadingItem && !uploadError && (
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between text-xs font-medium text-neutral-500">
             <span>
@@ -141,6 +142,11 @@ function DirectoryItem({
             />
           </div>
         </div>
+      )}
+      {uploadError && (
+        <p role="alert" className="mt-3 text-sm font-medium text-red-600">
+          Upload failed: {uploadError}
+        </p>
       )}
 
       {/* Context Menu */}
