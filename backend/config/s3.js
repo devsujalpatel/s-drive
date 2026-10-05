@@ -32,7 +32,7 @@ export const CreateGetSignedUrl = async ({ key, download = false, filename }) =>
    const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
-    ResponseContentDisposition: `${download ? "attachment" : "inline" }; filename=${filename}`
+    ResponseContentDisposition: `${download ? "attachment" : "inline" }; filename=${encodeURIComponent(filename)}`
    });
 
   return getSignedUrl(s3Client, command, {

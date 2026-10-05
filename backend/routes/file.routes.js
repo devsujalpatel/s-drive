@@ -15,11 +15,10 @@ router.param("id", validateId);
 router.param("parentDirId", validateId);
 
 
+// Create
 router.post("/upload/initiate", uploadInitiate);
 router.post("/upload/:id/complete", completeUpload);
 
-// CREATE
-router.post("/:id?", uploadFile);
 
 // READ
 router.get("/:id", getFile);
