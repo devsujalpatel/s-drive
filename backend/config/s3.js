@@ -1,5 +1,6 @@
 import "dotenv/config";
 import {
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -13,10 +14,7 @@ const s3Client = new S3Client({
   },
 });
 
-export const createUploadSignedUrl = async ({
-  key,
-  contentType,
-}) => {
+export const createUploadSignedUrl = async ({ key,contentType }) => {
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
@@ -28,3 +26,16 @@ export const createUploadSignedUrl = async ({
     signableHeaders: new Set(["content-type"]),
   });
 };
+
+
+export const CreateGetSignedUrl = async ({ key, download = false, filename }) => {
+   const command = new GetObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key,
+    ResponseContentDisposition: `${download ? "attachment" : "inline" }; filename=${filename}`
+   });
+
+  return getSignedUrl(s3Client, command, {
+    expiresIn: 300,
+  });
+}
