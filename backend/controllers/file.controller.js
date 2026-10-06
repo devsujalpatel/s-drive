@@ -1,9 +1,13 @@
-import { rm } from "fs/promises";
-import path from "path";
-import Directory from "../models/directory.model.js";
-import File from "../models/file.model.js";
-import { fileName } from "../schemas/file.schema.js";
-import { CreateGetSignedUrl, createUploadSignedUrl } from "../config/s3.js";
+import { rm } from 'fs/promises';
+import path from 'path';
+import Directory from '../models/directory.model.js';
+import File from '../models/file.model.js';
+import { fileName } from '../schemas/file.schema.js';
+import {
+  CreateGetSignedUrl,
+  createUploadSignedUrl,
+  getS3FileMetaData,
+} from '../config/s3.js';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
@@ -29,18 +33,25 @@ export const getFile = async (req, res, next) => {
 
     // Check if file exists
     if (!fileData) {
-      return res.status(404).json({ error: "File not found!" });
+      return res.status(404).json({ error: 'File not found!' });
     }
 
     // If "download" is requested, set the appropriate headers
-    if (req.query.action === "download") {
-      const fileUrl = await CreateGetSignedUrl({ key: `${id}${fileData.extension}`, download: true, filename: fileData.name })
-      return res.redirect(fileUrl)
+    if (req.query.action === 'download') {
+      const fileUrl = await CreateGetSignedUrl({
+        key: `${id}${fileData.extension}`,
+        download: true,
+        filename: fileData.name,
+      });
+      return res.redirect(fileUrl);
     }
 
     // Send file
-    const fileUrl = await CreateGetSignedUrl({ key: `${id}${fileData.extension}`, filename: fileData.name })
-    return res.redirect(fileUrl)
+    const fileUrl = await CreateGetSignedUrl({
+      key: `${id}${fileData.extension}`,
+      filename: fileData.name,
+    });
+    return res.redirect(fileUrl);
   } catch (error) {
     next(error);
   }
@@ -60,11 +71,11 @@ export const updateFile = async (req, res, next) => {
     });
 
     if (!file) {
-      return res.status(404).json({ error: "File not found!" });
+      return res.status(404).json({ error: 'File not found!' });
     }
     file.name = newFileName || file.name;
     await file.save();
-    return res.status(200).json({ message: "Renamed" });
+    return res.status(200).json({ message: 'Renamed' });
   } catch (err) {
     err.status = 500;
     next(err);
@@ -83,15 +94,12 @@ export const deleteFile = async (req, res, next) => {
     });
 
     if (!file) {
-      return res.status(404).json({ error: "File not found!" });
+      return res.status(404).json({ error: 'File not found!' });
     }
 
-
     await file.deleteOne();
-    await rm(`./storage/${id}${file.extension}`, { recursive: true });
     await updateDirectorySize(file.parentDirId, -file.size);
-
-    return res.status(200).json({ message: "File Deleted Successfully" });
+    return res.status(200).json({ message: 'File Deleted Successfully' });
   } catch (err) {
     next(err);
   }
@@ -107,7 +115,7 @@ export const uploadInitiate = async (req, res, next) => {
     if (user.deleted) {
       return res.status(401).json({
         error:
-          "Your account has been deleted. Please contact support if you need assistance.",
+          'Your account has been deleted. Please contact support if you need assistance.',
       });
     }
 
@@ -129,32 +137,32 @@ export const uploadInitiate = async (req, res, next) => {
 
     if (!parentDirData) {
       return res.status(404).json({
-        error: "Parent directory not found!",
+        error: 'Parent directory not found!',
       });
     }
 
     if (!rootDir) {
       return res.status(404).json({
-        error: "Root directory not found!",
+        error: 'Root directory not found!',
       });
     }
 
     const filename =
-      typeof req.body.fileData.name === "string"
+      typeof req.body.fileData.name === 'string'
         ? req.body.fileData.name
-        : "untitled";
+        : 'untitled';
 
     const filesize = Number(req.body.fileData.size);
 
     if (!Number.isSafeInteger(filesize) || filesize < 0) {
       return res.status(400).json({
-        error: "Invalid file size",
+        error: 'Invalid file size',
       });
     }
 
     if (filesize > MAX_FILE_SIZE) {
       return res.status(413).json({
-        error: "File too large",
+        error: 'File too large',
       });
     }
 
@@ -162,7 +170,7 @@ export const uploadInitiate = async (req, res, next) => {
 
     if (filesize > availableSpace) {
       return res.status(413).json({
-        error: "Not enough storage space",
+        error: 'Not enough storage space',
       });
     }
 
@@ -177,8 +185,6 @@ export const uploadInitiate = async (req, res, next) => {
       isUploading: true,
     });
 
-
-
     /*
      * Use the actual received size.
      */
@@ -191,16 +197,14 @@ export const uploadInitiate = async (req, res, next) => {
       },
     );
 
-    await updateDirectorySize(
-      parentDirId,
-      filesize,
-    );
-
-    const uploadSignedUrl = await createUploadSignedUrl({ key: `${insertedFile.id}${extension}`, contentType: req.body.fileData.contentType })
+    const uploadSignedUrl = await createUploadSignedUrl({
+      key: `${insertedFile.id}${extension}`,
+      contentType: req.body.fileData.contentType,
+    });
 
     return res.status(201).json({
       uploadSignedUrl,
-      fileId: insertedFile.id
+      fileId: insertedFile.id,
     });
   } catch (error) {
     /*
@@ -212,45 +216,60 @@ export const uploadInitiate = async (req, res, next) => {
       }).catch(() => {});
     }
 
-
-     //  Client uploaded more than declared.
-    if (
-      error instanceof Error &&
-      error.message === "FILE_SIZE_EXCEEDED"
-    ) {
+    //  Client uploaded more than declared.
+    if (error instanceof Error && error.message === 'FILE_SIZE_EXCEEDED') {
       return res.status(413).json({
-        error: "Uploaded file exceeds declared size",
+        error: 'Uploaded file exceeds declared size',
       });
     }
 
-     //  Client uploaded fewer bytes than declared.
-    if (
-      error instanceof Error &&
-      error.message === "FILE_SIZE_MISMATCH"
-    ) {
+    //  Client uploaded fewer bytes than declared.
+    if (error instanceof Error && error.message === 'FILE_SIZE_MISMATCH') {
       return res.status(400).json({
-        error: "Uploaded file size does not match declared size",
+        error: 'Uploaded file size does not match declared size',
       });
     }
 
-     //  Client disconnected / request was aborted.
+    //  Client disconnected / request was aborted.
     next(error);
   }
-}
+};
 
 export const completeUpload = async (req, res, next) => {
   try {
-    const file = await File.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id, isUploading: true },
-      { $set: { isUploading: false } },
-      { new: true },
-    );
+    const file = await File.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+      isUploading: true,
+    });
 
     if (!file) {
-      return res.status(404).json({ error: "Upload not found" });
+      return res.status(404).json({ error: 'File not found in our records' });
     }
 
-    return res.status(200).json({ message: "Upload completed" });
+    try {
+      const fileData = await getS3FileMetaData(`${file._id}${file.extension}`);
+      if (fileData.ContentLength !== file.size) {
+        await file.deleteOne();
+        return res.status(400).json({ error: 'File size does not match' });
+      }
+    } catch (error) {
+      await file.deleteOne();
+      return res.status(404).json({
+        error: 'File was not be uploaded properly',
+      });
+    }
+
+    file.isUploading = false;
+
+    await file.save();
+
+    await updateDirectorySize(file.parentDirId, file.size);
+
+    // Optional: Return a success response
+    return res
+      .status(200)
+      .json({ message: 'File uploaded successfully', file });
   } catch (error) {
     next(error);
   }

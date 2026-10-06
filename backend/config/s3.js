@@ -1,10 +1,11 @@
-import "dotenv/config";
+import 'dotenv/config';
 import {
   GetObjectCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -14,7 +15,7 @@ const s3Client = new S3Client({
   },
 });
 
-export const createUploadSignedUrl = async ({ key,contentType }) => {
+export const createUploadSignedUrl = async ({ key, contentType }) => {
   const command = new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
@@ -23,19 +24,32 @@ export const createUploadSignedUrl = async ({ key,contentType }) => {
 
   return getSignedUrl(s3Client, command, {
     expiresIn: 300,
-    signableHeaders: new Set(["content-type"]),
+    signableHeaders: new Set(['content-type']),
   });
 };
 
-
-export const CreateGetSignedUrl = async ({ key, download = false, filename }) => {
-   const command = new GetObjectCommand({
+export const CreateGetSignedUrl = async ({
+  key,
+  download = false,
+  filename,
+}) => {
+  const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
-    ResponseContentDisposition: `${download ? "attachment" : "inline" }; filename=${encodeURIComponent(filename)}`
-   });
+    ResponseContentDisposition: `${download ? 'attachment' : 'inline'}; filename=${encodeURIComponent(filename)}`,
+  });
 
   return getSignedUrl(s3Client, command, {
     expiresIn: 300,
   });
-}
+};
+
+export const getS3FileMetaData = async (key) => {
+  const command = new HeadObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key,
+  });
+
+  const response = await s3Client.send(command);
+  return response;
+};

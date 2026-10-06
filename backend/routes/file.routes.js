@@ -5,7 +5,6 @@ import {
   completeUpload,
   getFile,
   updateFile,
-  uploadFile,
   uploadInitiate,
 } from "../controllers/file.controller.js";
 
