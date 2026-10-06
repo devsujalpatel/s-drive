@@ -1,10 +1,11 @@
-import Directory from "../models/directory.model.js";
-import File from "../models/file.model.js";
+import { deleteS3Files } from '../config/s3.js';
+import Directory from '../models/directory.model.js';
+import File from '../models/file.model.js';
 import {
   directorySchema,
   directorySchemaRename,
-} from "../schemas/directory.schema.js";
-import { updateDirectorySize } from "./file.controller.js";
+} from '../schemas/directory.schema.js';
+import { updateDirectorySize } from './file.controller.js';
 
 // Read
 export const getDirectory = async (req, res, next) => {
@@ -20,7 +21,7 @@ export const getDirectory = async (req, res, next) => {
 
     if (!directoryData) {
       return res.status(404).json({
-        error: "Directory not found or you do not have access to it!",
+        error: 'Directory not found or you do not have access to it!',
       });
     }
 
@@ -42,7 +43,7 @@ export const getDirectory = async (req, res, next) => {
       _id: { $in: pathIds },
       userId: user._id,
     })
-      .select("_id name")
+      .select('_id name')
       .lean();
 
     const directoryMap = new Map(
@@ -88,13 +89,13 @@ export const createDirectory = async (req, res, next) => {
       _id: parentDirId,
       userId: user._id,
     })
-      .select("path")
+      .select('path')
       .lean();
 
     if (!parentDir)
       return res
         .status(404)
-        .json({ message: "Parent Directory Does not exist!" });
+        .json({ message: 'Parent Directory Does not exist!' });
 
     await Directory.create({
       name: dirname,
@@ -103,11 +104,11 @@ export const createDirectory = async (req, res, next) => {
       userId: user._id,
     });
 
-    return res.status(201).json({ message: "Directory Created!" });
+    return res.status(201).json({ message: 'Directory Created!' });
   } catch (err) {
     if (err.code === 121) {
       return res.status(400).json({
-        error: "Invalid Fields, please check your input and try again.",
+        error: 'Invalid Fields, please check your input and try again.',
       });
     } else {
       next(err);
@@ -120,7 +121,7 @@ export const updateDirectory = async (req, res, next) => {
   const user = req.user;
   const { id } = req.params;
   if (!id) {
-    return res.status(400).json({ message: "Directory ID is required!" });
+    return res.status(400).json({ message: 'Directory ID is required!' });
   }
   const { newDirName } = directorySchemaRename.parse(req.body);
 
@@ -129,7 +130,7 @@ export const updateDirectory = async (req, res, next) => {
       { _id: String(id), userId: user._id },
       { $set: { name: newDirName } },
     ).lean();
-    res.status(200).json({ message: "Directory Renamed!" });
+    res.status(200).json({ message: 'Directory Renamed!' });
   } catch (err) {
     next(err);
   }
@@ -148,7 +149,7 @@ export const deleteDirectory = async (req, res, next) => {
 
     if (!directoryData) {
       return res.status(404).json({
-        message: "Directory not found or you do not have access to it!",
+        message: 'Directory not found or you do not have access to it!',
       });
     }
 
@@ -172,9 +173,11 @@ export const deleteDirectory = async (req, res, next) => {
     }
 
     const { files, directories } = await getDirectoryContents(String(id));
+    const keys = files.map(({ _id, extension }) => ({
+      Key: `${_id}${extension}`,
+    }));
 
-    // for (const { _id, extension } of files) {
-    // }
+    await deleteS3Files(keys);
 
     await File.deleteMany({
       _id: { $in: files.map(({ _id }) => _id) },
@@ -185,7 +188,7 @@ export const deleteDirectory = async (req, res, next) => {
 
     await updateDirectorySize(directoryData.parentDirId, -directoryData.size);
 
-    res.status(200).json({ message: "Directory Deleted!" });
+    res.status(200).json({ message: 'Directory Deleted!' });
   } catch (err) {
     next(err);
   }
