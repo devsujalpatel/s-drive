@@ -1,4 +1,4 @@
-import { deleteS3Files } from '../config/s3.js';
+import { deleteS3Files } from '../services/s3.js';
 import Directory from '../models/directory.model.js';
 import File from '../models/file.model.js';
 import {

@@ -3,11 +3,12 @@ import Directory from '../models/directory.model.js';
 import File from '../models/file.model.js';
 import { fileName } from '../schemas/file.schema.js';
 import {
-  CreateGetSignedUrl,
+  createGetSignedUrl,
   createUploadSignedUrl,
   deleteS3File,
   getS3FileMetaData,
-} from '../config/s3.js';
+} from '../services/s3.js';
+import { createCloudfrontGetSignedUrl } from '../services/cloudfront.js';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
@@ -38,7 +39,7 @@ export const getFile = async (req, res, next) => {
 
     // If "download" is requested, set the appropriate headers
     if (req.query.action === 'download') {
-      const fileUrl = await CreateGetSignedUrl({
+      const fileUrl = await createGetSignedUrl({
         key: `${id}${fileData.extension}`,
         download: true,
         filename: fileData.name,
@@ -47,8 +48,9 @@ export const getFile = async (req, res, next) => {
     }
 
     // Send file
-    const fileUrl = await CreateGetSignedUrl({
+    const fileUrl = createCloudfrontGetSignedUrl({
       key: `${id}${fileData.extension}`,
+      download: false,
       filename: fileData.name,
     });
     return res.redirect(fileUrl);
