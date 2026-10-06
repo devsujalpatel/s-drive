@@ -1,4 +1,3 @@
-import { rm } from "fs/promises";
 import Directory from "../models/directory.model.js";
 import File from "../models/file.model.js";
 import {
@@ -174,9 +173,8 @@ export const deleteDirectory = async (req, res, next) => {
 
     const { files, directories } = await getDirectoryContents(String(id));
 
-    for (const { _id, extension } of files) {
-      await rm(`./storage/${_id.toString()}${extension}`);
-    }
+    // for (const { _id, extension } of files) {
+    // }
 
     await File.deleteMany({
       _id: { $in: files.map(({ _id }) => _id) },

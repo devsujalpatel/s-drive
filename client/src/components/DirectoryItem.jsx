@@ -1,170 +1,30 @@
-import {
-  FaFolder,
-  FaFilePdf,
-  FaFileImage,
-  FaFileVideo,
-  FaFileArchive,
-  FaFileCode,
-  FaFileAlt,
-} from "react-icons/fa";
-import { BsThreeDotsVertical } from "react-icons/bs";
-import ContextMenu from "../components/ContextMenu";
-import { formatBytes } from "../lib/formatBytes";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "./ui/tooltip";
+import { Archive, Code2, FileImage, FileText, Film, Folder, MoreHorizontal } from 'lucide-react';
+import ContextMenu from './ContextMenu';
+import { formatBytes } from '../lib/formatBytes';
+import { createPortal } from 'react-dom';
 
-function DirectoryItem({
-  item,
-  handleRowClick,
-  activeContextMenu,
-  contextMenuPos,
-  handleContextMenu,
-  getFileIcon,
-  isUploading,
-  uploadProgress,
-  uploadError,
-  handleCancelUpload,
-  handleDeleteFile,
-  handleDeleteDirectory,
-  openRenameModal,
-  onOpenDetails,
-  BASE_URL,
-}) {
-  // Convert the file icon string to the actual Icon component
-  function renderFileIcon(iconString) {
-    switch (iconString) {
-      case "pdf":
-        return <FaFilePdf className="text-xl text-red-500" />;
+function DirectoryItem({ item, handleRowClick, activeContextMenu, contextMenuPos, handleContextMenu, getFileIcon, uploadProgress, uploadError, handleCancelUpload, handleDeleteFile, handleDeleteDirectory, openRenameModal, onOpenDetails, BASE_URL }) {
+  const isUploadingItem = item.id.startsWith('temp-');
+  const iconMap = {
+    pdf: [FileText, 'file-icon-pdf'], image: [FileImage, 'file-icon-image'],
+    video: [Film, 'file-icon-video'], archive: [Archive, 'file-icon-archive'],
+    code: [Code2, 'file-icon-code'], alt: [FileText, 'file-icon-default'],
+  };
+  const [Icon, iconClass] = iconMap[getFileIcon(item.name)] || iconMap.alt;
+  const size = item.isDirectory ? (item.totalSize ?? item.size) : item.size;
 
-      case "image":
-        return <FaFileImage className="text-xl text-emerald-500" />;
-
-      case "video":
-        return <FaFileVideo className="text-xl text-violet-500" />;
-
-      case "archive":
-        return <FaFileArchive className="text-xl text-yellow-500" />;
-
-      case "code":
-        return <FaFileCode className="text-xl text-sky-500" />;
-
-      default:
-        return <FaFileAlt className="text-xl text-neutral-500" />;
-    }
-  }
-
-  const isUploadingItem = item.id.startsWith("temp-");
-  const itemSize = item.isDirectory ? (item.totalSize ?? item.size) : item.size;
-  const tooltipLabel = item.isDirectory ? "Folder size" : "File size";
-  const formattedSize = formatBytes(itemSize);
-
-  return (
-    <div
-      onClick={() =>
-        !(activeContextMenu || isUploading)
-          ? handleRowClick(item.isDirectory ? "directory" : "file", item.id)
-          : null
-      }
-      onContextMenu={(e) => handleContextMenu(e, item.id)}
-      className="group relative flex w-full flex-col rounded-2xl cursor-pointer border border-neutral-200/60 ring-1 ring-neutral-100/20 bg-white px-4 py-3 transition-all duration-200  hover:border-neutral-200 hover:shadow-xs "
-    >
-      {/* Main Row */}
-      <div className="flex items-center justify-between">
-        {/* Left */}
-        <div className="flex min-w-0 items-center gap-4">
-          <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-              item.isDirectory
-                ? "bg-amber-100 text-amber-600"
-                : "bg-blue-100 text-blue-600"
-            }`}
-          >
-            {item.isDirectory ? (
-              <FaFolder className="text-xl" />
-            ) : (
-              renderFileIcon(getFileIcon(item.name))
-            )}
-          </div>
-
-          <div className="min-w-0">
-            <p className="truncate font-medium text-neutral-900">{item.name}</p>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <p className="w-fit text-sm text-neutral-500">
-                    {item.isDirectory ? "Folder" : "File"}
-                  </p>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  {tooltipLabel}: {formattedSize}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-        </div>
-
-        {/* Three Dots */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleContextMenu(e, item.id);
-          }}
-          className="rounded-lg p-2 text-neutral-500 opacity-0 transition-all duration-200 hover:bg-neutral-100 hover:text-neutral-900 group-hover:opacity-100"
-        >
-          <BsThreeDotsVertical className="text-lg" />
-        </button>
-      </div>
-
-      {/* Upload Progress */}
-      {isUploadingItem && !uploadError && (
-        <div className="mt-4">
-          <div className="mb-2 flex items-center justify-between text-xs font-medium text-neutral-500">
-            <span>
-              {uploadProgress === 100 ? "Finishing..." : "Uploading..."}
-            </span>
-
-            <span>{Math.floor(uploadProgress)}%</span>
-          </div>
-
-          <div className="h-2 overflow-hidden rounded-full bg-neutral-200">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                uploadProgress === 100 ? "bg-green-500" : "bg-blue-600"
-              }`}
-              style={{
-                width: `${uploadProgress}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
-      {uploadError && (
-        <p role="alert" className="mt-3 text-sm font-medium text-red-600">
-          Upload failed: {uploadError}
-        </p>
-      )}
-
-      {/* Context Menu */}
-      {activeContextMenu === item.id && (
-        <ContextMenu
-          item={item}
-          contextMenuPos={contextMenuPos}
-          isUploadingItem={isUploadingItem}
-          handleCancelUpload={handleCancelUpload}
-          handleDeleteFile={handleDeleteFile}
-          handleDeleteDirectory={handleDeleteDirectory}
-          onOpenDetails={onOpenDetails}
-          openRenameModal={openRenameModal}
-          BASE_URL={BASE_URL}
-        />
-      )}
+  return <div className={`drive-item ${isUploadingItem ? 'drive-item-uploading' : ''}`} onClick={() => !activeContextMenu && handleRowClick(item.isDirectory ? 'directory' : 'file', item.id)} onContextMenu={(event) => handleContextMenu(event, item.id)}>
+    <span className={`drive-item-icon ${item.isDirectory ? 'folder-tile' : iconClass}`}>{item.isDirectory ? <Folder size={19} fill="currentColor" strokeWidth={1.7} /> : <Icon size={19} strokeWidth={1.8} />}</span>
+    <div className="drive-item-main">
+      <div className="drive-item-name-line"><span className="drive-item-name" title={item.name}>{item.name}</span>{isUploadingItem && <span className="uploading-pill">Uploading</span>}</div>
+      <span className="drive-item-meta">{item.isDirectory ? 'Folder' : 'File'} <span>·</span> {formatBytes(size)}</span>
+      {isUploadingItem && !uploadError && <div className="upload-progress-wrap"><div className="upload-progress-caption"><span>{uploadProgress >= 100 ? 'Finishing up…' : 'Uploading your file'}</span><span>{Math.floor(uploadProgress)}%</span></div><div className="upload-progress-track"><span style={{ width: `${uploadProgress}%` }} /></div></div>}
+      {uploadError && <span className="upload-error" role="alert">Upload failed: {uploadError}</span>}
     </div>
-  );
+    <span className="drive-item-updated">{item.isUploading ? 'In progress' : '—'}</span>
+    <button className="drive-item-menu-button" aria-label={`Actions for ${item.name}`} onClick={(event) => { event.stopPropagation(); handleContextMenu(event, item.id); }}><MoreHorizontal size={19} /></button>
+    {activeContextMenu === item.id && createPortal(<ContextMenu item={item} contextMenuPos={contextMenuPos} isUploadingItem={isUploadingItem} handleCancelUpload={handleCancelUpload} handleDeleteFile={handleDeleteFile} handleDeleteDirectory={handleDeleteDirectory} onOpenDetails={onOpenDetails} openRenameModal={openRenameModal} BASE_URL={BASE_URL} />, document.body)}
+  </div>;
 }
 
 export default DirectoryItem;

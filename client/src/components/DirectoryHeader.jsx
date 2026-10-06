@@ -1,256 +1,71 @@
-import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaFolderPlus,
-  FaUpload,
-  FaUser,
-  FaSignOutAlt,
-  FaSignInAlt,
-  FaGoogleDrive,
-} from "react-icons/fa";
-import api from "../lib/axios";
-import { showErrorToast } from "../lib/errorToast";
-import useStorageStore from "../store/useStorageStore";
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Cloud, FolderPlus, LogIn, LogOut, MoreHorizontal, Upload, UserRound } from 'lucide-react';
+import api from '../lib/axios';
+import { showErrorToast } from '../lib/errorToast';
+import useStorageStore from '../store/useStorageStore';
 
-
-function DirectoryHeader({
-  directoryName,
-  onCreateFolderClick,
-  onUploadFilesClick,
-  fileInputRef,
-  handleFileSelect,
-  disabled = false,
-}) {
-  const BASE_URL = import.meta.env.VITE_API_URL;
-
+function DirectoryHeader({ onCreateFolderClick, onUploadFilesClick, fileInputRef, handleFileSelect, disabled = false }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [userName, setUserName] = useState("Guest User");
-  const [userEmail, setUserEmail] = useState("guest@example.com");
-  const [profile, setProfile] = useState(null);
-  const [maxStorageInBytes, setMaxStorageInBytes] = useState(2 * 1024 ** 3);
-  const [usedStorageInBytes, setUsedStorageInBytes] = useState(0);
-
-  const usedGB = Number((usedStorageInBytes / 1024 ** 3).toFixed(2));
-  const totalGB = Number((maxStorageInBytes / 1024 ** 3).toFixed(2));
-
-  const userMenuRef = useRef(null);
+  const [user, setUser] = useState(null);
+  const menuRef = useRef(null);
   const navigate = useNavigate();
   const { setAvailableSpace } = useStorageStore();
-  
 
-  // -------------------------------------------
-  // 1. Fetch user info from /user on mount
-  // -------------------------------------------
-
-  async function fetchUser() {
-    try {
-      const { data } = await api.get("/user");
-
-      setUserName(data.name);
-      setUserEmail(data.email);
-      setProfile(data.profile);
-      setMaxStorageInBytes(data.maxStorageInBytes);
-      setUsedStorageInBytes(data.usedStorageInBytes);
+  useEffect(() => {
+    api.get('/user').then(({ data }) => {
+      setUser(data);
       setAvailableSpace(data.maxStorageInBytes - data.usedStorageInBytes);
-      setLoggedIn(true);
-
-      return data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        setUserName("Guest User");
-        setUserEmail("guest@example.com");
-        setProfile(null);
-        setLoggedIn(false);
-
-        return null;
-      }
-
-      showErrorToast(error, "Failed to fetch user info");
-
-      return null;
-    }
-  }
+    }).catch((error) => {
+      if (error.response?.status !== 401) showErrorToast(error, 'Failed to fetch user info');
+      setUser(null);
+    });
+  }, [setAvailableSpace]);
 
   useEffect(() => {
-    fetchUser();
-  }, [BASE_URL]);
-
-  // -------------------------------------------
-  // 2. Toggle user menu
-  // -------------------------------------------
-  const handleUserIconClick = () => {
-    setShowUserMenu((prev) => !prev);
-  };
-
-  // -------------------------------------------
-  // 3. Logout handler
-  // -------------------------------------------
-  const handleLogout = async () => {
-    try {
-      await api.post("/user/logout");
-
-      setLoggedIn(false);
-      setUserName("Guest User");
-      setUserEmail("guest@example.com");
-      setProfile(null);
-
-      navigate("/login");
-    } catch (error) {
-      showErrorToast(error, "Failed to log out");
-    } finally {
-      setShowUserMenu(false);
-    }
-  };
-
-  const handleLogoutAll = async () => {
-    try {
-      await api.post("/user/logout-all");
-
-      setLoggedIn(false);
-      setUserName("Guest User");
-      setUserEmail("guest@example.com");
-      setProfile(null);
-
-      navigate("/login");
-    } catch (error) {
-      showErrorToast(error, "Failed to log out from all devices");
-    } finally {
-      setShowUserMenu(false);
-    }
-  };
-
-  // -------------------------------------------
-  // 4. Close menu on outside click
-  // -------------------------------------------
-  useEffect(() => {
-    function handleDocumentClick(e) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
-        setShowUserMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleDocumentClick);
-    return () => {
-      document.removeEventListener("mousedown", handleDocumentClick);
-    };
+    const close = (event) => { if (menuRef.current && !menuRef.current.contains(event.target)) setShowUserMenu(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
   }, []);
 
+  const logout = async (all = false) => {
+    try {
+      await api.post(all ? '/user/logout-all' : '/user/logout');
+      setUser(null);
+      navigate('/login');
+    } catch (error) { showErrorToast(error, 'Failed to log out'); }
+  };
+
+  const used = user?.usedStorageInBytes ?? 0;
+  const total = user?.maxStorageInBytes ?? 1;
+  const percent = Math.min((used / total) * 100, 100);
+
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-neutral-200 bg-white/80 px-6 backdrop-blur-xl">
-      <Link to="/" className="flex items-center gap-3 cursor-pointer">
-        <FaGoogleDrive className="text-2xl text-blue-600" />
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {directoryName}
-        </h1>
-      </Link>
-      <div className="flex items-center gap-2">
-        {/* Create Folder (icon button) */}
-
-        <button
-          onClick={onCreateFolderClick}
-          disabled={disabled}
-          className="flex cursor-pointer h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white transition-all  hover:border-blue-500/20 hover:bg-blue-50/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <FaFolderPlus />
-        </button>
-
-        <button
-          onClick={onUploadFilesClick}
-          disabled={disabled}
-          className="flex h-11 cursor-pointer w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white transition-all  hover:border-green-500/20 hover:bg-green-50/60 hover:text-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <FaUpload />
-        </button>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          id="file-upload"
-          type="file"
-          style={{ display: "none" }}
-          multiple
-          onChange={handleFileSelect}
-        />
-
-        {/* User Icon & Dropdown Menu */}
-        <div className="user-menu-container" ref={userMenuRef}>
-          <button
-            onClick={handleUserIconClick}
-            className="overflow-hidden rounded-full cursor-pointer ring-2 ring-transparent transition hover:ring-blue-500"
-          >
-            {profile ? (
-              <img
-                src={profile}
-                alt=""
-                className="h-11 w-11 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-neutral-100">
-                <FaUser />
-              </div>
-            )}
+    <header className="drive-topbar">
+      <div className="drive-brand-wrap">
+        <Link to="/" className="drive-brand" aria-label="S Drive home">
+          <span className="drive-brand-mark"><Cloud size={19} strokeWidth={2.2} /></span>
+          <span>s<span className="drive-brand-accent">drive</span></span>
+        </Link>
+        <span className="topbar-divider" />
+        <span className="topbar-caption">Personal cloud</span>
+      </div>
+      <div className="drive-actions">
+        <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileSelect} />
+        <button className="drive-icon-button" onClick={onCreateFolderClick} disabled={disabled} title="New folder" aria-label="New folder"><FolderPlus size={18} /></button>
+        <button className="drive-upload-button" onClick={onUploadFilesClick} disabled={disabled}><Upload size={16} /> <span>Upload files</span></button>
+        <div className="profile-anchor" ref={menuRef}>
+          <button className="profile-button" onClick={() => setShowUserMenu((value) => !value)} aria-label="Account menu">
+            {user?.profile ? <img src={user.profile} alt="" /> : <UserRound size={18} />}
           </button>
-
-          {showUserMenu && (
-            <div>
-              {loggedIn ? (
-                <>
-                  <div className="absolute right-0 top-14 w-72 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl">
-                    <div className="flex items-center gap-3 border-b border-neutral-300 p-4">
-                      <img
-                        src={profile}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-medium">{userName}</p>
-                        <p className="text-sm text-neutral-500">{userEmail}</p>
-                      </div>
-                    </div>
-                    <div className="px-4 pt-4 py-2 flex items-start gap-2 justify-start flex-col">
-                      <div className="w-full bg-neutral-200 rounded-full">
-                        <div
-                          className="bg-blue-500 rounded-full h-2"
-                          style={{ width: `${(usedGB / totalGB) * 100}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-sm text-neutral-600 ml-0.5">
-                        {usedGB} GB of {totalGB} GB used
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex cursor-pointer w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-100"
-                    >
-                      <FaSignOutAlt />
-                      Logout
-                    </button>
-
-                    <button
-                      onClick={handleLogoutAll}
-                      className="flex cursor-pointer w-full items-center gap-3 px-4 py-3 text-left text-red-600 transition hover:bg-red-50"
-                    >
-                      <FaSignOutAlt />
-                      Logout All Devices
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Show Login if not logged in */}
-                  <div
-                    className="user-menu-item login-btn"
-                    onClick={() => {
-                      navigate("/login");
-                      setShowUserMenu(false);
-                    }}
-                  >
-                    <FaSignInAlt className="menu-item-icon" />
-                    <span>Login</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {showUserMenu && <div className="profile-menu">
+            {user ? <>
+              <div className="profile-menu-user"><strong>{user.name}</strong><span>{user.email}</span></div>
+              <div className="storage-meter"><div><span>Storage</span><span>{(used / 1024 ** 3).toFixed(1)} / {(total / 1024 ** 3).toFixed(0)} GB</span></div><div className="storage-track"><span style={{ width: `${percent}%` }} /></div></div>
+              <button onClick={() => logout(false)}><LogOut size={15} /> Sign out</button>
+              <button className="danger-menu-action" onClick={() => logout(true)}><MoreHorizontal size={16} /> Sign out everywhere</button>
+            </> : <button onClick={() => navigate('/login')}><LogIn size={16} /> Sign in</button>}
+          </div>}
         </div>
       </div>
     </header>

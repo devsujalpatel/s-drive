@@ -14,23 +14,24 @@ function ContextMenu({
     return (
       <div
         className="context-menu"
+        onClick={(event) => event.stopPropagation()}
         style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
       >
-        <div
+        <button type="button"
           className="context-menu-item"
           onClick={() => openRenameModal("directory", item.id, item.name)}
         >
           Rename
-        </div>
-        <div
+        </button>
+        <button type="button"
           className="context-menu-item"
           onClick={() => handleDeleteDirectory(item.id)}
         >
           Delete
-        </div>
-        <div className="context-menu-item" onClick={() => onOpenDetails(item)}>
+        </button>
+        <button type="button" className="context-menu-item" onClick={() => onOpenDetails(item)}>
           Details
-        </div>
+        </button>
       </div>
     );
   } else {
@@ -40,14 +41,15 @@ function ContextMenu({
       return (
         <div
           className="context-menu"
+          onClick={(event) => event.stopPropagation()}
           style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
         >
-          <div
+          <button type="button"
             className="context-menu-item"
             onClick={() => handleCancelUpload(item.id)}
           >
             Cancel
-          </div>
+          </button>
         </div>
       );
     } else {
@@ -55,34 +57,35 @@ function ContextMenu({
       return (
         <div
           className="context-menu"
+          onClick={(event) => event.stopPropagation()}
           style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
         >
-          <div
+          <button type="button"
             className="context-menu-item"
             onClick={() =>
               (window.location.href = `${BASE_URL}/file/${item.id}?action=download`)
             }
           >
             Download
-          </div>
-          <div
+          </button>
+          <button type="button"
             className="context-menu-item"
             onClick={() => openRenameModal("file", item.id, item.name)}
           >
             Rename
-          </div>
-          <div
+          </button>
+          <button type="button"
             className="context-menu-item"
             onClick={() => handleDeleteFile(item.id)}
           >
             Delete
-          </div>
-          <div
+          </button>
+          <button type="button"
             className="context-menu-item"
             onClick={() => onOpenDetails(item)}
           >
             Details
-          </div>
+          </button>
         </div>
       );
     }

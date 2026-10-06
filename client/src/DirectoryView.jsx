@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import DirectoryHeader from './components/DirectoryHeader';
 import CreateDirectoryModal from './components/CreateDirectoryModal';
@@ -12,6 +12,9 @@ import { DetailsPopup } from './components/DetailsPopup';
 import useStorageStore from './store/useStorageStore';
 import Breadcrumb from './components/breadcrumb';
 import { uploadInitiate } from './apis/fileApi';
+import { Files, FolderOpen, FolderPlus, HardDriveUpload, Plus, Upload } from 'lucide-react';
+import DeleteConfirmModal from './components/DeleteConfirmModal';
+import { createPortal } from 'react-dom';
 
 function DirectoryView() {
   const BASE_URL = import.meta.env.VITE_API_URL;
@@ -32,6 +35,8 @@ function DirectoryView() {
   // Modal states
   const [showCreateDirModal, setShowCreateDirModal] = useState(false);
   const [newDirname, setNewDirname] = useState('New Folder');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameType, setRenameType] = useState(null); // "directory" or "file"
@@ -337,8 +342,10 @@ function DirectoryView() {
     try {
       await api.delete(`/file/${id}`);
       getDirectoryItems();
+      return true;
     } catch (error) {
       showErrorToast(error, 'Failed to delete file');
+      return false;
     }
   }
 
@@ -347,9 +354,29 @@ function DirectoryView() {
     try {
       await api.delete(`/directory/${id}`);
       getDirectoryItems();
+      return true;
     } catch (error) {
       showErrorToast(error, 'Failed to delete folder');
+      return false;
     }
+  }
+
+  function requestDelete(type, id) {
+    const source = type === 'directory' ? directoriesList : filesList;
+    const item = source.find((entry) => String(entry.id) === String(id));
+    if (!item) return;
+    setActiveContextMenu(null);
+    setDeleteTarget({ type, id, name: item.name });
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+    const deleted = deleteTarget.type === 'directory'
+      ? await handleDeleteDirectory(deleteTarget.id)
+      : await handleDeleteFile(deleteTarget.id);
+    setIsDeleting(false);
+    if (deleted) setDeleteTarget(null);
   }
 
   /**
@@ -415,14 +442,18 @@ function DirectoryView() {
   function handleContextMenu(e, id) {
     e.stopPropagation();
     e.preventDefault();
-    const clickX = e.clientX;
-    const clickY = e.clientY;
 
     if (activeContextMenu === id) {
       setActiveContextMenu(null);
     } else {
+      const trigger = e.currentTarget;
+      const bounds = trigger.getBoundingClientRect();
+      const menuWidth = 160;
+      const menuHeight = 190;
+      const left = Math.max(8, Math.min(bounds.right - menuWidth, window.innerWidth - menuWidth - 8));
+      const top = Math.max(8, Math.min(bounds.bottom + 6, window.innerHeight - menuHeight - 8));
       setActiveContextMenu(id);
-      setContextMenuPos({ x: clickX - 110, y: clickY });
+      setContextMenuPos({ x: left, y: top });
     }
   }
 
@@ -452,7 +483,7 @@ function DirectoryView() {
   ];
 
   return (
-    <div className="directory-view">
+    <div className="drive-app-shell">
       <DirectoryHeader
         directoryName={directoryName}
         onCreateFolderClick={() => setShowCreateDirModal(true)}
@@ -466,7 +497,20 @@ function DirectoryView() {
         }
       />
 
-      <Breadcrumb path={path} userRootDirId={userRootDirId} />
+      <main className="drive-main">
+      <div className="drive-page-heading">
+        <div>
+          <div className="eyebrow">YOUR WORKSPACE</div>
+          <h1>{directoryName}</h1>
+          <p>A calm place for everything you want to keep.</p>
+        </div>
+        <button className="drive-new-folder" onClick={() => setShowCreateDirModal(true)} disabled={errorMessage === 'Directory not found or you do not have access to it!'}><Plus size={16} /> New folder</button>
+      </div>
+      <section className="drive-content-panel">
+      <div className="drive-content-toolbar">
+        <Breadcrumb path={path} userRootDirId={userRootDirId} />
+        <div className="drive-item-count"><Files size={15} /> {combinedItems.length} {combinedItems.length === 1 ? 'item' : 'items'}</div>
+      </div>
 
       {/* Create Directory Modal */}
       {showCreateDirModal && (
@@ -476,6 +520,16 @@ function DirectoryView() {
           onClose={() => setShowCreateDirModal(false)}
           onCreateDirectory={handleCreateDirectory}
         />
+      )}
+
+      {deleteTarget && createPortal(
+        <DeleteConfirmModal
+          item={deleteTarget}
+          busy={isDeleting}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+        />,
+        document.body,
       )}
 
       {/* Rename Modal */}
@@ -498,14 +552,9 @@ function DirectoryView() {
         // Check if the error is specifically the "no access" error
         errorMessage ===
         'Directory not found or you do not have access to it!' ? (
-          <p className="no-data-message">
-            Directory not found or you do not have access to it!
-          </p>
+          <div className="drive-empty-state"><span className="empty-state-icon"><FolderOpen size={25} /></span><h2>We can’t find this folder</h2><p>It may have been moved, deleted, or you may not have access.</p></div>
         ) : (
-          <p className="no-data-message">
-            This folder is empty. Upload files or create a folder to see some
-            data.
-          </p>
+          <div className="drive-empty-state"><span className="empty-state-icon"><HardDriveUpload size={25} /></span><h2>This folder is empty</h2><p>Upload something new or create a folder to get started.</p><div className="empty-state-actions"><button className="drive-upload-button" onClick={() => fileInputRef.current?.click()}><Upload size={15} /> Upload files</button><button className="drive-icon-button" onClick={() => setShowCreateDirModal(true)} title="New folder"><FolderPlus size={17} /></button></div></div>
         )
       ) : (
         <DirectoryList
@@ -515,17 +564,19 @@ function DirectoryView() {
           contextMenuPos={contextMenuPos}
           handleContextMenu={handleContextMenu}
           getFileIcon={getFileIcon}
-          isUploading={isUploading}
           progressMap={progressMap}
           uploadErrorMap={uploadErrorMap}
           handleCancelUpload={handleCancelUpload}
-          handleDeleteFile={handleDeleteFile}
-          handleDeleteDirectory={handleDeleteDirectory}
+          handleDeleteFile={(id) => requestDelete('file', id)}
+          handleDeleteDirectory={(id) => requestDelete('directory', id)}
           openRenameModal={openRenameModal}
           onOpenDetails={openDetailsPopup}
           BASE_URL={BASE_URL}
         />
       )}
+      </section>
+      <footer className="drive-footer"><span>Private by design</span><span className="footer-dot" /> Your files, organized your way</footer>
+      </main>
     </div>
   );
 }
