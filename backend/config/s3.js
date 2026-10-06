@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import {
   GetObjectCommand,
+  DeleteObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -52,4 +53,13 @@ export const getS3FileMetaData = async (key) => {
 
   const response = await s3Client.send(command);
   return response;
+};
+
+export const deleteS3File = async (key) => {
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.AWS_S3_BUCKET_NAME,
+    Key: key,
+  });
+
+  return s3Client.send(command);
 };

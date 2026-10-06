@@ -284,6 +284,9 @@ function DirectoryView() {
         finish();
       });
       xhr.addEventListener('abort', () => {
+        api.delete(`/file/upload/${fileId}`).catch((error) => {
+          showErrorToast(error, `Could not cancel ${currentItem.name}`);
+        });
         setFilesList((prev) =>
           prev.filter((file) => file.id !== currentItem.id),
         );

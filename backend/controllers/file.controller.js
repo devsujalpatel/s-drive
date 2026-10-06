@@ -1,4 +1,3 @@
-import { rm } from 'fs/promises';
 import path from 'path';
 import Directory from '../models/directory.model.js';
 import File from '../models/file.model.js';
@@ -6,6 +5,7 @@ import { fileName } from '../schemas/file.schema.js';
 import {
   CreateGetSignedUrl,
   createUploadSignedUrl,
+  deleteS3File,
   getS3FileMetaData,
 } from '../config/s3.js';
 
@@ -97,11 +97,37 @@ export const deleteFile = async (req, res, next) => {
       return res.status(404).json({ error: 'File not found!' });
     }
 
+    if (!file.isUploading) {
+      await deleteS3File(`${file._id}${file.extension}`);
+    }
     await file.deleteOne();
-    await updateDirectorySize(file.parentDirId, -file.size);
+    if (!file.isUploading) {
+      await updateDirectorySize(file.parentDirId, -file.size);
+    }
     return res.status(200).json({ message: 'File Deleted Successfully' });
   } catch (err) {
     next(err);
+  }
+};
+
+// Cancel an upload and remove its pending database record.
+export const cancelUpload = async (req, res, next) => {
+  try {
+    const file = await File.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user._id,
+      isUploading: true,
+    });
+
+    if (!file) {
+      return res.status(404).json({ error: 'Upload not found' });
+    }
+
+    // A PUT may have completed just before the client cancelled it.
+    await deleteS3File(`${file._id}${file.extension}`).catch(() => {});
+    return res.status(200).json({ message: 'Upload cancelled' });
+  } catch (error) {
+    next(error);
   }
 };
 
